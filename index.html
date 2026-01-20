@@ -409,6 +409,31 @@ p{ margin:0; color:var(--muted); }
 .task__cta{
   opacity: 1;
 }
+/* =========================
+   TASK: Right-side column alignment
+========================= */
+.task{
+  align-items: center; /* key: vertical alignment */
+}
+
+.task__right{
+  flex: 0 0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  width: 76px;                 /* match Start button column width */
+}
+
+.task__lock{
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background: rgba(148,163,184,.12);
+  color:#64748b;
+}
 
 /* Make Start button primary */
 .task__cta.btn{
@@ -1185,46 +1210,60 @@ textarea.formTextarea:focus{
                 <span class="pill">4</span>
               </div>
 
-              <div class="task task--locked">
-                <div class="task__left">
-                  <span class="task__lock" aria-hidden="true"><i class="fa-solid fa-lock"></i></span>
-                  <div>
-                    <div class="task__name">Take Short Quiz / Reflection</div>
-                    <div class="task__cost">Free</div>
-                  </div>
-                </div>
-              </div>
+<div class="task task--locked">
+  <div class="task__left">
+    <div>
+      <div class="task__name">Take Short Quiz / Reflection</div>
+      <div class="task__cost">Free</div>
+    </div>
+  </div>
 
-              <div class="task task--locked">
-                <div class="task__left">
-                  <span class="task__lock" aria-hidden="true"><i class="fa-solid fa-lock"></i></span>
-                  <div>
-                    <div class="task__name">Schedule 30-day success meeting</div>
-                    <div class="task__cost">Free</div>
-                  </div>
-                </div>
-              </div>
+  <div class="task__right">
+    <span class="task__lock" aria-hidden="true"><i class="fa-solid fa-lock"></i></span>
+  </div>
+</div>
 
-              <div class="task task--locked">
-                <div class="task__left">
-                  <span class="task__lock" aria-hidden="true"><i class="fa-solid fa-lock"></i></span>
-                  <div>
-                    <div class="task__name">Read What to Expect in Your 30-Day Success Check-In</div>
-                    <div class="task__cost">Free</div>
-                  </div>
-                </div>
-              </div>
+<div class="task task--locked">
+  <div class="task__left">
+    <div>
+      <div class="task__name">Schedule 30-day success meeting</div>
+      <div class="task__cost">Free</div>
+    </div>
+  </div>
 
-              <div class="task task--locked">
-                <div class="task__left">
-                  <span class="task__lock" aria-hidden="true"><i class="fa-solid fa-lock"></i></span>
-                  <div>
-                    <div class="task__name">Book additional Schedule Success Session</div>
-                    <div class="task__hint">Unlocks after first session</div>
-                    <div class="task__cost">1 meeting credit OR 100 tokens</div>
-                  </div>
-                </div>
-              </div>
+  <div class="task__right">
+    <span class="task__lock" aria-hidden="true"><i class="fa-solid fa-lock"></i></span>
+  </div>
+</div>
+
+<div class="task task--locked">
+  <div class="task__left">
+    <div>
+      <div class="task__name">Read What to Expect in Your 30-Day Success Check-In</div>
+      <div class="task__cost">Free</div>
+    </div>
+  </div>
+
+  <div class="task__right">
+    <span class="task__lock" aria-hidden="true"><i class="fa-solid fa-lock"></i></span>
+  </div>
+</div>
+
+<div class="task task--locked">
+  <div class="task__left">
+    <div>
+      <div class="task__name">Book additional Schedule Success Session</div>
+      <div class="task__hint">Unlocks after first session</div>
+      <div class="task__cost">1 meeting credit OR 100 tokens</div>
+    </div>
+  </div>
+
+  <div class="task__right">
+    <span class="task__lock" aria-hidden="true"><i class="fa-solid fa-lock"></i></span>
+  </div>
+</div>
+
+
 
             </div>
           </div>
