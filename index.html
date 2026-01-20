@@ -549,17 +549,39 @@ p{ margin:0; color:var(--muted); }
 
 /* =========================
    Feed
+   (FIXED: revert Smart Feed sizing so it’s NOT huge)
 ========================= */
-.feed{ display:flex; flex-direction:column; gap: 12px; }
+.feed{ display:flex; flex-direction:column; gap: 10px; }
+/* ===== Smart Feed dismiss animation ===== */
+@keyframes feedDismissOut{
+  0%{
+    opacity: 1;
+    transform: translateX(0);
+    max-height: 200px;
+    margin-top: 0;
+  }
+  100%{
+    opacity: 0;
+    transform: translateX(14px);
+    max-height: 0;
+    margin-top: -10px;
+  }
+}
+
+.feed-item.feed-item--dismissing{
+  animation: feedDismissOut .22s ease forwards;
+  pointer-events: none;
+}
 
 .feed-item{
   display:flex;
   gap: 12px;
-  padding: 14px;
+  padding: 12px;            /* smaller */
   border-radius: 12px;
   border: 1px solid var(--border);
   background: #fff;
   transition: box-shadow .15s ease;
+  align-items:flex-start;
 }
 .feed-item:hover{ box-shadow: var(--shadow-md); }
 
@@ -572,30 +594,40 @@ p{ margin:0; color:var(--muted); }
   border-color: rgba(59,130,246,.25);
 }
 
+/* icon: gray bg always (per your note) */
 .feed-item__icon{
-  width: 38px; height: 38px;
+  width: 32px; height: 32px;     /* smaller */
   border-radius: 999px;
-  background:#fff;
+  background:#f1f5f9;            /* gray bg */
   display:flex;
   align-items:center;
   justify-content:center;
   flex: 0 0 auto;
   color: var(--primary);
+  font-weight: 900;
+  font-size: 14px;
 }
 
 .feed-item__icon i{
-  font-size: 16px;
+  font-size: 14px;
   line-height: 1;
 }
 
 .feed-item__body h3{
-  font-size: 14px;
+  font-size: 13px;               /* smaller */
   font-weight: 700;
   margin-bottom: 6px;
 }
 .feed-item__body p{
-  font-size: 13px;
+  font-size: 12px;               /* smaller */
   margin-bottom: 10px;
+}
+
+/* keep buttons small in feed */
+.feed .btn.btn--sm{
+  height: 32px;
+  font-size: 12px;
+  padding: 0 12px;
 }
 
 .iconbtn{
@@ -1078,7 +1110,7 @@ textarea.formTextarea:focus{
 }
 .drawer__title{
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
 }
 .drawer__sub{
   font-size: 12px;
@@ -1121,7 +1153,7 @@ textarea.formTextarea:focus{
 
 .drawerSectionTitle{
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 800;
   letter-spacing: .08em;
   text-transform: uppercase;
   color: #64748b;
@@ -1146,7 +1178,7 @@ textarea.formTextarea:focus{
 .articleBody{
   padding: 12px 12px 14px;
 }
-.articleTitle{ font-size: 13px; font-weight: 900; }
+.articleTitle{ font-size: 13px; font-weight: 700; }
 .articleDesc{ font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
 .articleActions{ margin-top: 10px; display:flex; gap:10px; }
 
@@ -1162,7 +1194,7 @@ textarea.formTextarea:focus{
 }
 .field label{
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   color: #334155;
 }
 .field input{
@@ -1485,43 +1517,92 @@ textarea.formTextarea:focus{
             <p>Personalized recommendations and reminders</p>
           </div>
 
-          <div class="feed">
+          <!-- UPDATED SMART FEED: non-reading tasks not done yet -->
+          <div id="smartFeed" class="feed">
+            <!-- 1) keep as is -->
             <div class="feed-item feed-item--alert">
               <div class="feed-item__icon">!</div>
               <div class="feed-item__body">
                 <h3>Schedule your Success Call</h3>
-                <p>Book your first onboarding session to get started on the right foot.</p>
+                <p>Book your first onboarding session so we can kick off your setup the right way.</p>
                 <button class="btn btn--primary btn--sm">Schedule Now</button>
               </div>
               <button class="iconbtn" aria-label="Dismiss">✕</button>
             </div>
 
+            <!-- 2) Tech Intake (blue) -->
             <div class="feed-item feed-item--tip">
-              <div class="feed-item__icon"><i class="fa-solid fa-lightbulb"></i></div>
+              <div class="feed-item__icon"><i class="fa-solid fa-screwdriver-wrench"></i></div>
               <div class="feed-item__body">
-                <h3>Import your contacts before setup</h3>
-                <p>Having your contact list ready will help us configure your system faster.</p>
-                <button class="btn btn--primary btn--sm">View Guide</button>
+                <h3>Complete Tech Intake Form</h3>
+                <p>Tell us what tools you use today so we can personalize your system and automations.</p>
+                <button class="btn btn--primary btn--sm">Start</button>
               </div>
               <button class="iconbtn" aria-label="Dismiss">✕</button>
             </div>
 
+            <!-- 3) Company Basics (blue) -->
             <div class="feed-item feed-item--tip">
-              <div class="feed-item__icon"><i class="fa-solid fa-play"></i></div>
+              <div class="feed-item__icon"><i class="fa-solid fa-building"></i></div>
               <div class="feed-item__body">
-                <h3>Watch: Intro to Smart Journeys</h3>
-                <p>2-minute video explaining how Segwik's automation will save you hours.</p>
-                <button class="btn btn--primary btn--sm">Watch Video</button>
+                <h3>Complete your Company Basics</h3>
+                <p>Add your company info so your profile, digital card, and onboarding setup stay accurate.</p>
+                <button class="btn btn--primary btn--sm">Start</button>
               </div>
               <button class="iconbtn" aria-label="Dismiss">✕</button>
             </div>
 
+            <!-- 4) Branding Form (blue) -->
+            <div class="feed-item feed-item--tip">
+              <div class="feed-item__icon"><i class="fa-solid fa-palette"></i></div>
+              <div class="feed-item__body">
+                <h3>Fill In Branding Form</h3>
+                <p>Share logo/colors/style so we can design a digital card that matches your brand.</p>
+                <button class="btn btn--primary btn--sm">Start</button>
+              </div>
+              <button class="iconbtn" aria-label="Dismiss">✕</button>
+            </div>
+
+            <!-- 5) Background Image (white) -->
             <div class="feed-item">
-              <div class="feed-item__icon"><i class="fa-solid fa-lightbulb"></i></div>
+              <div class="feed-item__icon"><i class="fa-solid fa-image"></i></div>
               <div class="feed-item__body">
-                <h3>Prepare your tech stack info</h3>
-                <p>Know what CRM, email platform, and tools you're currently using.</p>
-                <button class="btn btn--primary btn--sm">Fill Form</button>
+                <h3>Identify and Collect Background Image</h3>
+                <p>Pick a clean background image that fits your brand (used in your digital card and screens).</p>
+                <button class="btn btn--outline btn--sm">Mark complete</button>
+              </div>
+              <button class="iconbtn" aria-label="Dismiss">✕</button>
+            </div>
+
+            <!-- 6) Social URLs (white) -->
+            <div class="feed-item">
+              <div class="feed-item__icon"><i class="fa-solid fa-link"></i></div>
+              <div class="feed-item__body">
+                <h3>Identify and Collect Social Media URLs</h3>
+                <p>Gather your exact social links so we can connect them to your profile and digital card.</p>
+                <button class="btn btn--outline btn--sm">Mark complete</button>
+              </div>
+              <button class="iconbtn" aria-label="Dismiss">✕</button>
+            </div>
+
+            <!-- 7) Other Assets (white) -->
+            <div class="feed-item">
+              <div class="feed-item__icon"><i class="fa-solid fa-folder-open"></i></div>
+              <div class="feed-item__body">
+                <h3>Identify and Collect other Digital Marketing Assets or Links</h3>
+                <p>Bring any important links (menus, portfolio, booking, reviews, PDFs, Drive links).</p>
+                <button class="btn btn--outline btn--sm">Mark complete</button>
+              </div>
+              <button class="iconbtn" aria-label="Dismiss">✕</button>
+            </div>
+
+            <!-- 8) Business Cards (white) -->
+            <div class="feed-item">
+              <div class="feed-item__icon"><i class="fa-solid fa-address-card"></i></div>
+              <div class="feed-item__body">
+                <h3>Collect and Prepare Business Cards</h3>
+                <p>Set aside a small stack so we can fine-tune scanning + data capture for your workflow.</p>
+                <button class="btn btn--outline btn--sm">Mark complete</button>
               </div>
               <button class="iconbtn" aria-label="Dismiss">✕</button>
             </div>
@@ -2111,7 +2192,6 @@ function chevSVG(){
     </svg>`;
 }
 
-
 function renderProject(idx){
   currentProjectIndex = idx;
   const proj = projects[idx];
@@ -2604,4 +2684,148 @@ function mapReadyTasksToDrawer(){
   });
 }
 mapReadyTasksToDrawer();
+/* =========================
+   SMART FEED (LIMIT 5 + DISMISS ROTATE)
+========================= */
+
+// 1) Define ALL smart feed items (same content you already had)
+const smartFeedItems = [
+  {
+    id: "sf-1",
+    type: "alert",
+    iconHtml: "!",
+    title: "Schedule your Success Call",
+    desc: "Book your first onboarding session so we can kick off your setup the right way.",
+    button: { style: "primary", label: "Schedule Now" }
+  },
+  {
+    id: "sf-2",
+    type: "tip",
+    iconHtml: `<i class="fa-solid fa-screwdriver-wrench"></i>`,
+    title: "Complete Tech Intake Form",
+    desc: "Tell us what tools you use today so we can personalize your system and automations.",
+    button: { style: "primary", label: "Start" }
+  },
+  {
+    id: "sf-3",
+    type: "tip",
+    iconHtml: `<i class="fa-solid fa-building"></i>`,
+    title: "Complete your Company Basics",
+    desc: "Add your company info so your profile, digital card, and onboarding setup stay accurate.",
+    button: { style: "primary", label: "Start" }
+  },
+  {
+    id: "sf-4",
+    type: "tip",
+    iconHtml: `<i class="fa-solid fa-palette"></i>`,
+    title: "Fill In Branding Form",
+    desc: "Share logo/colors/style so we can design a digital card that matches your brand.",
+    button: { style: "primary", label: "Start" }
+  },
+  {
+    id: "sf-5",
+    type: "default",
+    iconHtml: `<i class="fa-solid fa-image"></i>`,
+    title: "Identify and Collect Background Image",
+    desc: "Pick a clean background image that fits your brand (used in your digital card and screens).",
+    button: { style: "outline", label: "Mark complete" }
+  },
+  {
+    id: "sf-6",
+    type: "default",
+    iconHtml: `<i class="fa-solid fa-link"></i>`,
+    title: "Identify and Collect Social Media URLs",
+    desc: "Gather your exact social links so we can connect them to your profile and digital card.",
+    button: { style: "outline", label: "Mark complete" }
+  },
+  {
+    id: "sf-7",
+    type: "default",
+    iconHtml: `<i class="fa-solid fa-folder-open"></i>`,
+    title: "Identify and Collect other Digital Marketing Assets or Links",
+    desc: "Bring any important links (menus, portfolio, booking, reviews, PDFs, Drive links).",
+    button: { style: "outline", label: "Mark complete" }
+  },
+  {
+    id: "sf-8",
+    type: "default",
+    iconHtml: `<i class="fa-solid fa-address-card"></i>`,
+    title: "Collect and Prepare Business Cards",
+    desc: "Set aside a small stack so we can fine-tune scanning + data capture for your workflow.",
+    button: { style: "outline", label: "Mark complete" }
+  }
+];
+
+// 2) Maintain state: dismissed IDs + queue ordering
+const dismissedFeed = new Set();
+
+// 3) Render: always show next 5 NON-dismissed items
+function renderSmartFeed() {
+  const feedEl = document.getElementById("smartFeed");
+  if (!feedEl) return;
+
+  const remaining = smartFeedItems.filter(it => !dismissedFeed.has(it.id));
+  const visible = remaining.slice(0, 5);
+
+  // Empty state
+  if (visible.length === 0) {
+    feedEl.innerHTML = `
+      <div class="feed-item">
+        <div class="feed-item__icon"><i class="fa-solid fa-circle-check"></i></div>
+        <div class="feed-item__body">
+          <h3>You’re all caught up</h3>
+          <p>No new recommendations right now.</p>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  // Normal feed
+  feedEl.innerHTML = visible.map(item => {
+    const typeClass =
+      item.type === "alert" ? "feed-item--alert" :
+      item.type === "tip" ? "feed-item--tip" : "";
+
+    const btnClass = item.button.style === "primary" ? "btn--primary" : "btn--outline";
+
+    return `
+      <div class="feed-item ${typeClass}" data-feed-id="${item.id}">
+        <div class="feed-item__icon">${item.iconHtml}</div>
+
+        <div class="feed-item__body">
+          <h3>${item.title}</h3>
+          <p>${item.desc}</p>
+          <button class="btn ${btnClass} btn--sm">${item.button.label}</button>
+        </div>
+
+        <button class="iconbtn js-feed-dismiss" aria-label="Dismiss" title="Dismiss">✕</button>
+      </div>
+    `;
+  }).join("");
+
+  // Bind dismiss buttons
+  feedEl.querySelectorAll(".js-feed-dismiss").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const row = btn.closest("[data-feed-id]");
+      if (!row) return;
+
+      const id = row.getAttribute("data-feed-id");
+     // Animate out first, THEN dismiss + re-render
+row.classList.add("feed-item--dismissing");
+
+setTimeout(() => {
+  dismissedFeed.add(id);
+  renderSmartFeed();
+}, 230);
+
+    });
+  });
+}
+
+// initial render
+renderSmartFeed();
+
 </script>
