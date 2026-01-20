@@ -242,12 +242,21 @@ p{ margin:0; color:var(--muted); }
 }
 .journey__item{
   display:flex;
+  align-items:center; /* ✅ THIS centers the phase text vertically */
   gap: 12px;
   padding: 10px 10px;
   border-radius: 12px;
   cursor:pointer;
   transition: background .15s ease;
 }
+.journey__text{
+  min-width: 0;
+  flex: 1;
+}
+.journey__name{
+  line-height: 1.2;
+}
+
 .journey__item:hover{ background:#f6f8fc; }
 
 .journey__dot{
@@ -267,14 +276,69 @@ p{ margin:0; color:var(--muted); }
 .journey__item--locked .journey__dot{ background: #f0f3f8; color:#9aa5b1; }
 .journey__item--locked .journey__name{ color:#9aa5b1; }
 
+/* clickable phases + expand indicator */
+.journey__item--clickable{ cursor:pointer; }
+.journey__item--locked{ cursor:not-allowed; }
+.journey__chev{
+  margin-left:auto;
+  width: 28px;              /* smaller button */
+  height: 28px;             /* smaller button */
+  border-radius: 10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#94a3b8;
+  transition: transform .15s ease, background .15s ease;
+}
+
+.journey__item--clickable:hover .journey__chev{ background:#eef2ff; color:#334155; }
+.journey__item--expanded .journey__chev{ transform: rotate(180deg); }
+
+.phaseTasks{
+  margin: 6px 0 10px;
+  padding: 10px 10px 2px;
+  border-radius: 12px;
+  background: #f8fbff;
+  border: 1px solid rgba(230,235,242,.9);
+}
+.phaseTask{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 10px;
+  padding: 10px 10px;
+  border-radius: 12px;
+  cursor:pointer;
+  transition: background .15s ease;
+}
+.phaseTask:hover{ background:#eef6ff; }
+.phaseTask__left{ display:flex; flex-direction:column; min-width:0; }
+.phaseTask__name{ font-weight: 700; font-size: 13px; }
+.phaseTask__meta{ font-size: 12px; color: var(--muted); margin-top: 4px; }
+.phaseTask__pill{
+  flex: 0 0 auto;
+  height: 22px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #1d4ed8;
+  font-weight: 500;
+  font-size: 11px;
+}
+
+/* =========================
+   UPDATED: projects dots placement + no borders + no hint
+========================= */
 .projects__dots{
   display:flex;
   align-items:center;
   justify-content:center;
   gap: 10px;
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px dashed #e3e9f2;
+
+  /* moved to be just under PROJECT label */
+  margin: 10px 0 12px;
+  padding: 0;
+  border: none;
 }
 .projects__dotbtn{
   width: 14px;
@@ -295,12 +359,7 @@ p{ margin:0; color:var(--muted); }
   background: var(--primary);
   box-shadow: 0 0 0 4px rgba(59,130,246,.12);
 }
-.projects__dots-hint{
-  margin-top: 10px;
-  text-align:center;
-  font-size: 12px;
-  color: #64748b;
-}
+.projects__dots-hint{ display:none; }
 
 /* =========================
    Meeting card
@@ -467,7 +526,6 @@ p{ margin:0; color:var(--muted); }
   width: 100%;
   align-items:flex-start;
 }
-
 
 /* See more */
 .tasks__moreRow{
@@ -771,9 +829,8 @@ p{ margin:0; color:var(--muted); }
   border-radius: 16px;
   box-shadow: var(--shadow-md);
   overflow:hidden;
-    max-height: calc(100vh - 120px);
+  max-height: calc(100vh - 120px);
   height: auto;
-
 
   /* FIX: so internal height limits work correctly */
   display:flex;
@@ -800,8 +857,6 @@ p{ margin:0; color:var(--muted); }
   display:flex;
   flex-direction:column;
 }
-
-
 
 .modal__head{
   display:flex;
@@ -849,14 +904,13 @@ p{ margin:0; color:var(--muted); }
   -webkit-overflow-scrolling: touch;
 }
 
-
 .formRow{ margin-top: 22px; }
 .formRow:first-child{ margin-top:0; }
 .formLabel{
   font-size: 13px;
   font-weight: 700;
   margin-bottom: 14px;
-    margin-top: 14px;
+  margin-top: 14px;
 }
 .formHint{
   font-size: 12px;
@@ -984,6 +1038,161 @@ textarea.formTextarea:focus{
   min-height: 0;
 }
 
+/* =========================
+   SMART TASK DRAWER
+========================= */
+.drawer{
+  position: fixed;
+  inset: 0;
+  z-index: 99998;
+  display:none;
+}
+.drawer--open{ display:block; }
+
+.drawer__backdrop{
+  position:absolute;
+  inset:0;
+  background: rgba(15,23,42,.35);
+  backdrop-filter: blur(3px);
+}
+.drawer__panel{
+  position:absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: min(460px, calc(100% - 40px));
+  background: #fff;
+  border-left: 1px solid var(--border);
+  box-shadow: -10px 0 30px rgba(16,24,40,.12);
+  display:flex;
+  flex-direction:column;
+}
+.drawer__head{
+  padding: 16px 16px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap: 10px;
+}
+.drawer__title{
+  font-size: 14px;
+  font-weight: 800;
+}
+.drawer__sub{
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.drawer__close{
+  border:none;
+  background: transparent;
+  cursor:pointer;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  color:#64748b;
+  flex: 0 0 auto;
+}
+.drawer__close:hover{ background:#eef2ff; color: var(--text); }
+
+/* body default no-scroll unless needed */
+.drawer__body{
+  padding: 16px;
+  overflow: hidden;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.drawer__body--scroll{
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.drawerCard{
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+}
+.drawerCard + .drawerCard{ margin-top: 12px; }
+
+.drawerSectionTitle{
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #64748b;
+  margin: 0 0 10px;
+}
+
+.articleCard{
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow:hidden;
+  background:#fff;
+}
+.articleThumb{
+  width:100%;
+  aspect-ratio: 16 / 9;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(59,130,246,.10), transparent 40%),
+    radial-gradient(circle at 70% 50%, rgba(96,165,250,.16), transparent 45%),
+    linear-gradient(180deg, #fff, #f7fbff);
+  border-bottom: 1px solid var(--border);
+}
+.articleBody{
+  padding: 12px 12px 14px;
+}
+.articleTitle{ font-size: 13px; font-weight: 900; }
+.articleDesc{ font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
+.articleActions{ margin-top: 10px; display:flex; gap:10px; }
+
+.fieldGrid{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+.field{
+  display:flex;
+  flex-direction:column;
+  gap: 6px;
+}
+.field label{
+  font-size: 12px;
+  font-weight: 800;
+  color: #334155;
+}
+.field input{
+  height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0 12px;
+  font-size: 13px;
+  outline:none;
+}
+.field input:focus{
+  border-color: rgba(59,130,246,.5);
+  box-shadow: 0 0 0 4px rgba(59,130,246,.10);
+}
+.fileDrop{
+  border: 1px dashed #cbd5e1;
+  border-radius: 14px;
+  padding: 12px;
+  font-size: 12px;
+  color: var(--muted);
+  background:#f8fbff;
+}
+.drawer__foot{
+  padding: 14px 16px;
+  border-top: 1px solid var(--border);
+  background:#fff;
+  display:flex;
+  gap: 10px;
+}
+.drawer__foot .btn{ flex: 1; }
 </style>
 
 <meta charset="UTF-8">
@@ -1081,18 +1290,19 @@ textarea.formTextarea:focus{
         <!-- UPDATED: Projects + phases -->
         <section class="card">
           <div class="projects__label">PROJECTS</div>
-          <h2 id="projectTitle" class="card__title" style="margin-bottom:14px;">Segwik Custom Onboarding</h2>
 
-          <div id="projectPhases" class="journey">
-            <!-- (JS injects phases) -->
-          </div>
-
+          <!-- MOVED DOTS: directly under label -->
           <div class="projects__dots" aria-label="Project carousel">
             <button class="projects__dotbtn projects__dotbtn--active" data-project="0" aria-label="Project 1"></button>
             <button class="projects__dotbtn" data-project="1" aria-label="Project 2"></button>
             <button class="projects__dotbtn" data-project="2" aria-label="Project 3"></button>
           </div>
-          <div class="projects__dots-hint">Click dots to switch projects</div>
+
+          <h2 id="projectTitle" class="card__title" style="margin-bottom:14px;">Segwik Custom Onboarding</h2>
+
+          <div id="projectPhases" class="journey">
+            <!-- (JS injects phases + expandable tasks) -->
+          </div>
         </section>
 
         <!-- UPDATED: Upcoming Meetings empty state -->
@@ -1262,9 +1472,6 @@ textarea.formTextarea:focus{
     <span class="task__lock" aria-hidden="true"><i class="fa-solid fa-lock"></i></span>
   </div>
 </div>
-
-
-
             </div>
           </div>
         </section>
@@ -1667,18 +1874,127 @@ textarea.formTextarea:focus{
       </form>
     </div>
   </div>
+
+  <!-- SMART TASK DRAWER -->
+  <div id="smartDrawer" class="drawer" aria-hidden="true">
+    <div class="drawer__backdrop" data-drawer-close="1"></div>
+    <div class="drawer__panel" role="dialog" aria-modal="true" aria-label="Smart Task Drawer">
+      <div class="drawer__head">
+        <div>
+          <div id="drawerTitle" class="drawer__title">Task</div>
+          <div id="drawerSub" class="drawer__sub">Details</div>
+        </div>
+        <button class="drawer__close" aria-label="Close" data-drawer-close="1">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div id="drawerBody" class="drawer__body">
+        <!-- JS injects drawer content -->
+      </div>
+
+      <div id="drawerFoot" class="drawer__foot" style="display:none;">
+        <!-- JS injects footer buttons -->
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
 /* =========================
-   PROJECTS carousel (dots clickable)
+   PROJECTS carousel + clickable phases + expandable tasks
 ========================= */
+
+/* You said: "i will give the data later"
+   So phases now include tasks in structure, ready for swapping later. */
 const projects = [
   {
     title: "Segwik Custom Onboarding",
     phases: [
-      { label: "Onboarding Pre Booking", icon: "circle", state: "active" },
-      { label: "Onboarding Booking Placed", icon: "circle", state: "normal" },
+      {
+        label: "Onboarding Pre Booking",
+        icon: "circle",
+        state: "active",
+        tasks: [
+          { id:"p1-ph1-t1", type:"book", name:"Book Onboarding Meeting", meta:"Free",
+            meetingName:"Segwik Digital Transformation Kickoff",
+            meetingDesc:`This 1:1 Success Training session is your guided introduction to Segwik. We’ll start with a quick review of your goals and the tools you already use, then walk you through the essential parts of the platform—importing contacts, setting up your digital card, scanning business cards, navigating your workspace, understanding contact types and personas, and seeing how automations and journeys work together.
+You’ll learn how Segwik keeps your relationships organized, helps you follow up consistently, and supports the way you work every day. Before we finish, we’ll show you what a best-in-class 30-day roadmap looks like, answer any final questions, and book your 30-day check-in so you know exactly what comes next.
+This meeting is all about clarity, confidence, and getting you set up for meaningful progress from day one.` }
+        ]
+      },
+      {
+        label: "Onboarding Booking Placed",
+        icon: "circle",
+        state: "normal",
+        tasks: [
+          { id:"p1-ph2-t1", type:"learn", name:"Learn about Segwik", meta:"Articles",
+            articles:[
+              {
+                title:"What Segwik Does & Doesn’t Do (Simple Overview)",
+                desc:"Segwik does a lot of amazing things for you… but it isn’t a magical robot business that runs itself while you nap. 😴 (Yet.)",
+                url:"https://segwik.com/what-segwik-does-and-doesnt-do"
+              }
+            ]
+          },
+          { id:"p1-ph2-t2", type:"fields", name:"Complete your Company Basics", meta:"Company profile fields",
+            fields:{
+              companyName:"Segwik",
+              address1:"",
+              address2:"",
+              city:"",
+              state:"",
+              zip:"",
+              email:"",
+              phone:"",
+              website:"",
+              socials:""
+            }
+          },
+          { id:"p1-ph2-t3", type:"learn", name:"Learn about Contact Importing", meta:"Articles",
+            articles:[
+              { title:"How Importing Works in Segwik (Beginner Guide)",
+                desc:"Importing helps you get your existing contacts into Segwik quickly so you can focus on relationships instead of retyping information.",
+                url:"https://segwik.com/how-importing-works-in-segwik-beginner-guide"
+              },
+              { title:"CSV Cleanup Tips (Simple Rules for Beginners)",
+                desc:"Clean data imports faster, maps easier, and creates fewer issues later.",
+                url:"https://segwik.com/csv-cleanup-tips-simple-rules-for-beginners"
+              },
+              { title:"Export Contacts From Popular Tools (Step-by-Step Guide)",
+                desc:"Export your contacts from Gmail, iCloud, Outlook, or Mailchimp in minutes—so you can bring them into Segwik quickly and stay organized.",
+                url:"https://segwik.com/export-contacts-from-popular-tools-step-by-step-guide"
+              },
+              { title:"How Business Card Scanning Works (and How to Get the Best Results)",
+                desc:"Clean data imports faster, maps easier, and creates fewer issues later.",
+                url:"https://segwik.com/how-business-card-scanning-works-and-how-to-get-the-best-results"
+              }
+            ]
+          },
+          { id:"p1-ph2-t4", type:"collect", name:"Identify and Collect Background Image", meta:"Prep item",
+            desc:"Choose a clean, high-quality background image that matches your brand. You’ll use this in your Segwik digital card and landing screens." },
+          { id:"p1-ph2-t5", type:"collect", name:"Identify and Collect Social Media URLs", meta:"Prep item",
+            desc:"Gather the exact URLs for your main social profiles so we can connect them to your digital card and contact experience." },
+          { id:"p1-ph2-t6", type:"collect", name:"Identify and Collect other Digital Marketing Assets or Links", meta:"Prep item",
+            desc:"Compile any important links you want customers to access—menus, portfolios, booking links, reviews, brochures, or Google Drive folders." },
+          { id:"p1-ph2-t7", type:"form", name:"Fill In Branding Form", meta:"Form task",
+            formName:"Branding & Digital Card Style Intake" },
+          { id:"p1-ph2-t8", type:"collect", name:"Collect and Prepare Business Cards", meta:"Prep item",
+            desc:"Set aside a small stack of business cards you regularly receive, so we can fine-tune scanning and data capture for your workflow." },
+          { id:"p1-ph2-t9", type:"learn", name:"Read What is Included in Your Plan Journey Guide", meta:"Articles",
+            articles:[
+              { title:"How to Build a Great Digital Card",
+                desc:"A great digital card makes it easy for people to save you, contact you, book time with you, and share you—without friction.",
+                url:"https://segwik.com/how-to-build-a-great-digital-card"
+              },
+              { title:"What Are Contact Types vs Personas?",
+                desc:"Contact Types and Personas help Segwik understand both your relationship to someone and who they are in your world.",
+                url:"https://segwik.com/what-are-contact-types-vs-personas"
+              }
+            ]
+          }
+        ]
+      },
       { label: "Onboarding Live Meeting - Segwik Overview", icon: "lock", state: "locked" },
       { label: "Onboarding Live Meeting - Phone Contact Import", icon: "lock", state: "locked" },
       { label: "Onboarding Live Meeting - Digital Card Design & Optimization", icon: "lock", state: "locked" },
@@ -1692,7 +2008,34 @@ const projects = [
   {
     title: "Complimentary Tech Stack & Customer Journey Roadmap",
     phases: [
-      { label: "Onboarding Pre-Meeting Preparation", icon: "circle", state: "active" },
+      {
+        label: "Onboarding Pre-Meeting Preparation",
+        icon: "circle",
+        state: "active",
+        tasks: [
+          { id:"p2-ph1-t1", type:"form", name:"Complete Tech Intake Form", meta:"Form task", formName:"Tech Stack Intake" },
+          { id:"p2-ph1-t2", type:"learn", name:"Read Your Business Tech Stack Guide", meta:"Articles",
+            articles:[
+              { title:"What Is a Business Tech Stack? (Beginner Guide)",
+                desc:"A business tech stack is simply: The tools you use to run your business day to day.",
+                url:"https://segwik.com/what-is-a-business-tech-stack-beginner-guide"
+              },
+              { title:"How Segwik Works With Your Existing Tools",
+                desc:"Segwik is designed to work alongside the tools you already use.",
+                url:"https://segwik.com/how-segwik-works-with-your-existing-tools"
+              },
+              { title:"Common Business Tools Explained Simply",
+                desc:"Many of these tools do similar things, just in different ways.",
+                url:"https://segwik.com/common-business-tools-explained-simply"
+              },
+              { title:"What to Connect Now vs Later",
+                desc:"Start with the tools that directly support your day-to-day relationships and follow-ups.",
+                url:"https://segwik.com/what-to-connect-now-vs-later"
+              }
+            ]
+          }
+        ]
+      },
       { label: "Review Submission & Furthur Discovery", icon: "lock", state: "locked" },
       { label: "Delivery & Client Consideration", icon: "lock", state: "locked" },
       { label: "30-Day Follow-Up Reference", icon: "lock", state: "locked" }
@@ -1701,7 +2044,35 @@ const projects = [
   {
     title: "CRM Technology & AI Foundations",
     phases: [
-      { label: "Education", icon: "circle", state: "active" }
+      {
+        label: "Education",
+        icon: "circle",
+        state: "active",
+        tasks: [
+          { id:"p3-ph1-t1", type:"read", name:"Read Tech & Automation Articles", meta:"Articles",
+            articles:[
+              { title:"A Simple Introduction to Customer Automation",
+                desc:"Important things happen — automatically — even when you’re busy.",
+                url:"https://segwik.com/a-simple-introduction-to-customer-automation"
+              },
+              { title:"What Journeys Are and How They Activate",
+                desc:"A journey is the step-by-step path from first contact to lasting trust — and Segwik helps you activate and guide that path.",
+                url:"https://segwik.com/what-journeys-are-and-how-they-activate"
+              },
+              { title:"Automations vs Journeys: What’s the Difference?",
+                desc:"Automations handle the small stuff. Journeys guide the big picture.",
+                url:"https://segwik.com/automations-vs-journeys-whats-the-difference"
+              },
+              { title:"Real-World Customer Journeys (And the Automation Behind Them)",
+                desc:"See how familiar experiences like airlines, restaurants, dentists, retail, and online ordering guide people step-by-step — with automation quietly keeping everything on track.",
+                url:"https://segwik.com/real-world-customer-journeys-and-the-automation-behind-them"
+              }
+            ]
+          },
+          // Note: user said this is the only one that is grayed out, not clickable
+          { id:"p3-ph1-t2", type:"locked", name:"Take Short Quiz / Reflection", meta:"Free", locked:true }
+        ]
+      }
     ]
   }
 ];
@@ -1709,6 +2080,9 @@ const projects = [
 const projectTitleEl = document.getElementById("projectTitle");
 const phasesEl = document.getElementById("projectPhases");
 const dotBtns = Array.from(document.querySelectorAll(".projects__dotbtn"));
+
+let currentProjectIndex = 0;
+let expandedPhaseKey = null; // "projIdx|phaseIdx"
 
 function iconSVG(type){
   if(type === "circle"){
@@ -1730,12 +2104,23 @@ function iconSVG(type){
     </svg>`;
 }
 
+function chevSVG(){
+  return `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" width="16" height="16">
+      <path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"></path>
+    </svg>`;
+}
+
+
 function renderProject(idx){
+  currentProjectIndex = idx;
   const proj = projects[idx];
   projectTitleEl.textContent = proj.title;
   phasesEl.innerHTML = "";
 
-  proj.phases.forEach(ph => {
+  proj.phases.forEach((ph, phaseIdx) => {
+    const phaseKey = `${idx}|${phaseIdx}`;
+
     const item = document.createElement("div");
     item.className = "journey__item";
     if(ph.state === "active") item.classList.add("journey__item--active");
@@ -1752,7 +2137,6 @@ function renderProject(idx){
       dot.style.background = "var(--primary)";
       dot.style.color = "#fff";
     }
-
     dot.innerHTML = iconSVG(ph.icon);
 
     const txt = document.createElement("div");
@@ -1761,7 +2145,70 @@ function renderProject(idx){
 
     item.appendChild(dot);
     item.appendChild(txt);
+
+    // clickable phases only if not locked AND has tasks
+    const canExpand = (ph.state !== "locked") && Array.isArray(ph.tasks) && ph.tasks.length;
+    if(canExpand){
+      item.classList.add("journey__item--clickable");
+      const chev = document.createElement("div");
+      chev.className = "journey__chev";
+      chev.innerHTML = chevSVG();
+      item.appendChild(chev);
+
+      // expanded state
+      if(expandedPhaseKey === phaseKey){
+        item.classList.add("journey__item--expanded");
+      }
+
+      item.addEventListener("click", ()=>{
+        expandedPhaseKey = (expandedPhaseKey === phaseKey) ? null : phaseKey;
+        renderProject(currentProjectIndex);
+      });
+    }
+
     phasesEl.appendChild(item);
+
+    // render phase tasks if expanded
+    if(canExpand && expandedPhaseKey === phaseKey){
+      const list = document.createElement("div");
+      list.className = "phaseTasks";
+
+      ph.tasks.forEach(t=>{
+        // locked task item
+        if(t.locked){
+          const locked = document.createElement("div");
+          locked.className = "phaseTask";
+          locked.style.opacity = ".6";
+          locked.style.cursor = "not-allowed";
+          locked.innerHTML = `
+            <div class="phaseTask__left">
+              <div class="phaseTask__name">${t.name}</div>
+              <div class="phaseTask__meta">${t.meta || ""}</div>
+            </div>
+            <div class="phaseTask__pill"><i class="fa-solid fa-lock"></i></div>
+          `;
+          list.appendChild(locked);
+          return;
+        }
+
+        const row = document.createElement("div");
+        row.className = "phaseTask";
+        row.setAttribute("data-taskid", t.id);
+        row.innerHTML = `
+          <div class="phaseTask__left">
+            <div class="phaseTask__name">${t.name}</div>
+          </div>
+          <div class="phaseTask__pill">Start Task</div>
+        `;
+        row.addEventListener("click",(e)=>{
+          e.stopPropagation();
+          openSmartTask(t);
+        });
+        list.appendChild(row);
+      });
+
+      phasesEl.appendChild(list);
+    }
   });
 
   dotBtns.forEach((b,i)=> {
@@ -1773,6 +2220,7 @@ function renderProject(idx){
 dotBtns.forEach(btn => {
   btn.addEventListener("click", () => {
     const idx = Number(btn.getAttribute("data-project"));
+    expandedPhaseKey = null;
     renderProject(idx);
   });
 });
@@ -1851,4 +2299,309 @@ supportForm.addEventListener("submit", (e)=>{
   supportForm.reset();
   bugBlock.style.display = "none";
 });
+
+/* =========================
+   SMART TASK DRAWER behaviour
+========================= */
+const drawer = document.getElementById("smartDrawer");
+const drawerTitle = document.getElementById("drawerTitle");
+const drawerSub = document.getElementById("drawerSub");
+const drawerBody = document.getElementById("drawerBody");
+const drawerFoot = document.getElementById("drawerFoot");
+
+function openDrawer(){
+  drawer.classList.add("drawer--open");
+  drawer.setAttribute("aria-hidden","false");
+  document.body.style.overflow = "hidden";
+}
+function closeDrawer(){
+  drawer.classList.remove("drawer--open");
+  drawer.setAttribute("aria-hidden","true");
+  document.body.style.overflow = "";
+  drawerBody.classList.remove("drawer__body--scroll");
+  drawerBody.scrollTop = 0;
+}
+
+document.querySelectorAll("[data-drawer-close='1']").forEach(el=>{
+  el.addEventListener("click", ()=> closeDrawer());
+});
+
+// ESC closes drawer too
+document.addEventListener("keydown",(e)=>{
+  if(e.key === "Escape"){
+    if(drawer.classList.contains("drawer--open")) closeDrawer();
+  }
+});
+
+// Apply scroll ONLY if needed
+function setDrawerScrollIfNeeded(){
+  requestAnimationFrame(()=>{
+    // If content taller than available space -> scroll
+    if(drawerBody.scrollHeight > drawerBody.clientHeight + 4){
+      drawerBody.classList.add("drawer__body--scroll");
+    } else {
+      drawerBody.classList.remove("drawer__body--scroll");
+    }
+  });
+}
+
+function drawerFooter(html){
+  drawerFoot.innerHTML = html || "";
+  drawerFoot.style.display = html ? "" : "none";
+}
+
+/* Render task types */
+function openSmartTask(task){
+  drawerTitle.textContent = task.name;
+  drawerSub.textContent = task.meta || "Task details";
+
+  // reset
+  drawerBody.innerHTML = "";
+  drawerFooter("");
+
+  // book task
+  if(task.type === "book"){
+    drawerBody.innerHTML = `
+      <div class="drawerCard">
+        <div style="font-weight:900; font-size:14px;">${task.meetingName || "Meeting"}</div>
+        <div style="font-size:12px; color:var(--muted); margin-top:8px; line-height:1.55; white-space:pre-line;">
+          ${task.meetingDesc || ""}
+        </div>
+      </div>
+    `;
+    drawerFooter(`
+      <button class="btn btn--outline" data-drawer-close="1">Close</button>
+      <button class="btn btn--primary" id="btnBookMeeting">Book</button>
+    `);
+    setTimeout(()=>{
+      const b = document.getElementById("btnBookMeeting");
+      if(b){
+        b.addEventListener("click", ()=>{
+          alert("Booking flow will be connected later.");
+        });
+      }
+      // bind close button in footer too
+      drawerFoot.querySelectorAll("[data-drawer-close='1']").forEach(x=>x.addEventListener("click", closeDrawer));
+    },0);
+  }
+
+  // learn/read tasks (articles)
+  if(task.type === "learn" || task.type === "read"){
+    const articles = Array.isArray(task.articles) ? task.articles : [];
+    const articleHtml = articles.map((a,idx)=>`
+      <div class="articleCard" style="margin-top:${idx===0?0:12}px;">
+        <div class="articleThumb" aria-hidden="true"></div>
+        <div class="articleBody">
+          <div class="articleTitle">${a.title || "Article"}</div>
+          <div class="articleDesc">${a.desc || ""}</div>
+          <div class="articleActions">
+            <a class="btn btn--primary btn--sm" href="${a.url || "#"}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">Read article</a>
+            <button class="btn btn--outline btn--sm" type="button">Save for later</button>
+          </div>
+        </div>
+      </div>
+    `).join("");
+
+    drawerBody.innerHTML = `
+      <div class="drawerCard">
+        ${articleHtml || `<div style="font-size:12px;color:var(--muted);">No articles attached yet.</div>`}
+      </div>
+    `;
+
+    drawerFooter(`
+      <button class="btn btn--outline" data-drawer-close="1">Close</button>
+      <button class="btn btn--primary" id="btnCompleteTask">Mark task complete</button>
+    `);
+    setTimeout(()=>{
+      const b = document.getElementById("btnCompleteTask");
+      if(b){
+        b.addEventListener("click", ()=>{
+          alert("Marked complete (demo). Backend wiring later.");
+          closeDrawer();
+        });
+      }
+      drawerFoot.querySelectorAll("[data-drawer-close='1']").forEach(x=>x.addEventListener("click", closeDrawer));
+    },0);
+  }
+
+  // form task
+  if(task.type === "form"){
+    drawerBody.innerHTML = `
+      <div class="drawerCard">
+        <div style="font-weight:900; font-size:14px;">${task.formName || "Form"}</div>
+        <div style="font-size:12px; color:var(--muted); margin-top:8px; line-height:1.55;">
+          This quick form helps us personalize your setup and keep onboarding fast and accurate.
+        </div>
+      </div>
+    `;
+    drawerFooter(`
+      <button class="btn btn--outline" data-drawer-close="1">Close</button>
+      <button class="btn btn--primary" id="btnStartForm">Start</button>
+    `);
+    setTimeout(()=>{
+      const b = document.getElementById("btnStartForm");
+      if(b){
+        b.addEventListener("click", ()=>{
+          alert("Form flow will be connected later.");
+        });
+      }
+      drawerFoot.querySelectorAll("[data-drawer-close='1']").forEach(x=>x.addEventListener("click", closeDrawer));
+    },0);
+  }
+
+  // fields task (company basics)
+  if(task.type === "fields"){
+    const f = task.fields || {};
+    drawerBody.innerHTML = `
+      <div class="drawerCard">
+
+        <div class="fieldGrid">
+          <div class="field">
+            <label>Company name</label>
+            <input value="${(f.companyName || "Segwik").replace(/"/g,'&quot;')}" />
+          </div>
+
+          <div class="field">
+            <label>Business address</label>
+            <input value="${(f.address1 || "").replace(/"/g,'&quot;')}" placeholder="123 Main St" />
+          </div>
+
+          <div class="field">
+            <label>Address 2</label>
+            <input value="${(f.address2 || "").replace(/"/g,'&quot;')}" placeholder="Suite / Unit" />
+          </div>
+
+          <div class="field">
+            <label>City</label>
+            <input value="${(f.city || "").replace(/"/g,'&quot;')}" placeholder="City" />
+          </div>
+
+          <div class="field">
+            <label>State</label>
+            <input value="${(f.state || "").replace(/"/g,'&quot;')}" placeholder="State" />
+          </div>
+
+          <div class="field">
+            <label>Zip</label>
+            <input value="${(f.zip || "").replace(/"/g,'&quot;')}" placeholder="Zip" />
+          </div>
+
+          <div class="field">
+            <label>Business email</label>
+            <input value="${(f.email || "").replace(/"/g,'&quot;')}" placeholder="you@company.com" />
+          </div>
+
+          <div class="field">
+            <label>Business phone</label>
+            <input value="${(f.phone || "").replace(/"/g,'&quot;')}" placeholder="(555) 555-5555" />
+          </div>
+
+          <div class="field">
+            <label>Website</label>
+            <input value="${(f.website || "").replace(/"/g,'&quot;')}" placeholder="https://..." />
+          </div>
+
+          <div class="field">
+            <label>Social media URLs</label>
+            <input value="${(f.socials || "").replace(/"/g,'&quot;')}" placeholder="Instagram, LinkedIn, TikTok, etc." />
+          </div>
+
+          <div class="fileDrop">
+            <strong>Upload logo</strong><br>
+            Drag & drop here or click to upload (demo placeholder)
+          </div>
+        </div>
+      </div>
+    `;
+
+    drawerFooter(`
+      <button class="btn btn--outline" data-drawer-close="1">Close</button>
+      <button class="btn btn--primary" id="btnSaveFields">Save</button>
+    `);
+
+    setTimeout(()=>{
+      const b = document.getElementById("btnSaveFields");
+      if(b){
+        b.addEventListener("click", ()=>{
+          alert("Saved (demo). Backend wiring later.");
+          closeDrawer();
+        });
+      }
+      drawerFoot.querySelectorAll("[data-drawer-close='1']").forEach(x=>x.addEventListener("click", closeDrawer));
+    },0);
+  }
+
+  // collect/prepare task
+  if(task.type === "collect"){
+    drawerBody.innerHTML = `
+      <div class="drawerCard">
+        <div style="font-weight:900; font-size:14px;">${task.name}</div>
+        <div style="font-size:12px; color:var(--muted); margin-top:8px; line-height:1.55;">
+          ${task.desc || "Please complete this prep item so your onboarding session can stay focused and efficient."}
+        </div>
+      </div>
+    `;
+    drawerFooter(`
+      <button class="btn btn--outline" data-drawer-close="1">Close</button>
+      <button class="btn btn--primary" id="btnCollectComplete">Mark complete</button>
+    `);
+    setTimeout(()=>{
+      const b = document.getElementById("btnCollectComplete");
+      if(b){
+        b.addEventListener("click", ()=>{
+          alert("Marked complete (demo).");
+          closeDrawer();
+        });
+      }
+      drawerFoot.querySelectorAll("[data-drawer-close='1']").forEach(x=>x.addEventListener("click", closeDrawer));
+    },0);
+  }
+
+  openDrawer();
+  setDrawerScrollIfNeeded();
+}
+
+/* Also make existing Ready Tasks clickable (opens drawer) */
+function mapReadyTasksToDrawer(){
+  const ready = Array.from(document.querySelectorAll(".task.task--ready"));
+  ready.forEach(el=>{
+    el.style.cursor = "pointer";
+    el.addEventListener("click",(e)=>{
+      // ignore click on button but still open drawer
+      const nameEl = el.querySelector(".task__name");
+      const taskName = nameEl ? nameEl.textContent.trim() : "Task";
+
+      // Find matching task in project data (best-effort)
+      const allTasks = [];
+      projects.forEach(p=>{
+        (p.phases||[]).forEach(ph=>{
+          (ph.tasks||[]).forEach(t=> allTasks.push(t));
+        });
+      });
+      const found = allTasks.find(t=>t.name === taskName);
+
+      if(found){
+        openSmartTask(found);
+      }else{
+        // default collect-style fallback
+        openSmartTask({
+          type:"collect",
+          name: taskName,
+          meta:"Task",
+          desc:"Please complete this item so your onboarding stays fast, focused, and smooth."
+        });
+      }
+    });
+
+    const btn = el.querySelector(".task__cta");
+    if(btn){
+      btn.addEventListener("click",(ev)=>{
+        ev.preventDefault();
+        ev.stopPropagation();
+        el.click();
+      });
+    }
+  });
+}
+mapReadyTasksToDrawer();
 </script>
