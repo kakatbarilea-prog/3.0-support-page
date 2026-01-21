@@ -1827,132 +1827,307 @@ textarea.formTextarea:focus{
         </button>
       </div>
 
-      <form id="supportForm">
-        <div class="modal__body">
-          <div class="formRow">
-            <div class="formLabel">Where is the issue happening?</div>
-            <div class="optGrid">
-              <label class="opt">
-                <input type="radio" name="where" value="Mobile app" required>
-                <div class="opt__text">Segwik App</div>
-              </label>
-              <label class="opt">
-                <input type="radio" name="where" value="Web app">
-                <div class="opt__text">Segwik Desktop</div>
-              </label>
-            </div>
-          </div>
+<form id="supportForm">
+  <div class="modal__body">
 
-          <div class="formRow">
-            <div class="formLabel">What do you need help with?</div>
-            <div class="optGrid">
-              <label class="opt">
-                <input type="radio" name="need" value="Bug" required>
-                <div class="opt__text">Bug — something isn’t working</div>
-              </label>
-              <label class="opt">
-                <input type="radio" name="need" value="Training">
-                <div class="opt__text">Training — How do I do something?</div>
-              </label>
-              <label class="opt">
-                <input type="radio" name="need" value="Billing question">
-                <div class="opt__text">Billing question</div>
-              </label>
-              <label class="opt">
-                <input type="radio" name="need" value="Feature request">
-                <div class="opt__text">Feature request</div>
-              </label>
-            </div>
-          </div>
+    <!-- Q1 ALWAYS -->
+    <div class="formRow">
+      <div class="formLabel">What do you want to reach out about?</div>
+      <div class="optGrid">
+        <label class="opt">
+          <input type="radio" name="reachOutAbout" value="Support" required>
+          <div class="opt__text">I have a problem / something isn’t working (Support)</div>
+        </label>
 
-          <!-- Bug-only -->
-          <div id="bugBlock" style="display:none;">
-            <div class="formRow">
-              <div class="formLabel">If it’s a bug: what best describes what’s happening?</div>
-              <div class="optGrid">
-                <label class="opt">
-                  <input type="checkbox" name="bugType" value="App freezes / loading gets stuck">
-                  <div class="opt__text">App freezes / loading gets stuck</div>
-                </label>
-                <label class="opt">
-                  <input type="checkbox" name="bugType" value="Button doesn’t work">
-                  <div class="opt__text">Button doesn’t work</div>
-                </label>
-                <label class="opt">
-                  <input type="checkbox" name="bugType" value="Something isn’t syncing">
-                  <div class="opt__text">Something isn’t syncing</div>
-                </label>
-                <label class="opt">
-                  <input type="checkbox" name="bugType" value="Data missing or wrong">
-                  <div class="opt__text">Data missing or wrong</div>
-                </label>
-                <label class="opt">
-                  <input type="checkbox" name="bugType" value="Doesn’t look right visually">
-                  <div class="opt__text">Doesn’t look right visually</div>
-                </label>
-                <label class="opt">
-                  <input type="checkbox" name="bugType" value="Something else">
-                  <div class="opt__text">Something else</div>
-                </label>
-              </div>
-            </div>
-          </div>
+        <label class="opt">
+          <input type="radio" name="reachOutAbout" value="Training">
+          <div class="opt__text">I need help learning how to do something (Training)</div>
+        </label>
 
-          <div class="formRow">
-            <div class="formLabel">What’s the impact?</div>
-            <div class="optGrid">
-              <label class="opt">
-                <input type="radio" name="impact" value="Blocking" required>
-                <div class="opt__text">Blocking — I can’t continue what I’m trying to do</div>
-              </label>
-              <label class="opt">
-                <input type="radio" name="impact" value="High">
-                <div class="opt__text">High — important feature not working right</div>
-              </label>
-              <label class="opt">
-                <input type="radio" name="impact" value="Medium">
-                <div class="opt__text">Medium — annoying but workaround exists</div>
-              </label>
-              <label class="opt">
-                <input type="radio" name="impact" value="Low">
-                <div class="opt__text">Low — minor / cosmetic</div>
-              </label>
-            </div>
-          </div>
+        <label class="opt">
+          <input type="radio" name="reachOutAbout" value="Billing">
+          <div class="opt__text">Billing question</div>
+        </label>
 
-          <div class="formRow">
-            <div class="formLabel">When did it start?</div>
-            <div class="optGrid">
-              <label class="opt">
-                <input type="radio" name="startWhen" value="Just now" required>
-                <div class="opt__text">Just now</div>
-              </label>
-              <label class="opt">
-                <input type="radio" name="startWhen" value="Today">
-                <div class="opt__text">Today</div>
-              </label>
-              <label class="opt">
-                <input type="radio" name="startWhen" value="This week">
-                <div class="opt__text">This week</div>
-              </label>
-              <label class="opt">
-                <input type="radio" name="startWhen" value="I’m not sure / it’s been a while">
-                <div class="opt__text">I’m not sure / it’s been a while</div>
-              </label>
-            </div>
-          </div>
+        <label class="opt">
+          <input type="radio" name="reachOutAbout" value="Feature">
+          <div class="opt__text">Feature request / product idea</div>
+        </label>
 
-          <div class="formRow">
-            <div class="formLabel">Describe what happened</div>
-            <textarea class="formTextarea" name="details" placeholder="Tell us what you were doing, what you expected, and what happened instead..." required></textarea>
-          </div>
+        <label class="opt">
+          <input type="radio" name="reachOutAbout" value="General">
+          <div class="opt__text">I don’t have a problem — I just want to reach out</div>
+        </label>
+
+        <label class="opt">
+          <input type="radio" name="reachOutAbout" value="Other">
+          <div class="opt__text">Other</div>
+        </label>
+      </div>
+    </div>
+
+
+    <!-- =========================
+         SUPPORT BLOCK (Q2-Q5)
+    ========================= -->
+    <div id="supportBlock" style="display:none;">
+
+      <div class="formRow">
+        <div class="formLabel">Where is the issue happening?</div>
+        <div class="optGrid">
+          <label class="opt">
+            <input type="radio" name="supportWhere" value="Mobile app">
+            <div class="opt__text">Mobile app</div>
+          </label>
+          <label class="opt">
+            <input type="radio" name="supportWhere" value="Web app">
+            <div class="opt__text">Web app</div>
+          </label>
         </div>
+      </div>
 
-        <div class="modal__foot">
-          <button type="button" class="btn btn--outline" data-close="1">Cancel</button>
-          <button type="submit" class="btn btn--primary">Send Message</button>
+      <div class="formRow">
+        <div class="formLabel">What best describes the issue?</div>
+        <div class="optGrid">
+          <label class="opt">
+            <input type="radio" name="supportIssueType" value="App freezes / loading gets stuck">
+            <div class="opt__text">App freezes / loading gets stuck</div>
+          </label>
+          <label class="opt">
+            <input type="radio" name="supportIssueType" value="Button doesn’t work">
+            <div class="opt__text">Button doesn’t work</div>
+          </label>
+          <label class="opt">
+            <input type="radio" name="supportIssueType" value="Something isn’t syncing">
+            <div class="opt__text">Something isn’t syncing</div>
+          </label>
+          <label class="opt">
+            <input type="radio" name="supportIssueType" value="Data missing or wrong">
+            <div class="opt__text">Data missing or wrong</div>
+          </label>
+          <label class="opt">
+            <input type="radio" name="supportIssueType" value="Doesn’t look right visually">
+            <div class="opt__text">Doesn’t look right visually</div>
+          </label>
+          <label class="opt">
+            <input type="radio" name="supportIssueType" value="Notifications / emails not sending">
+            <div class="opt__text">Notifications / emails not sending</div>
+          </label>
+          <label class="opt">
+            <input type="radio" name="supportIssueType" value="Login / access issue">
+            <div class="opt__text">Login / access issue</div>
+          </label>
+          <label class="opt">
+            <input type="radio" name="supportIssueType" value="Something else">
+            <div class="opt__text">Something else</div>
+          </label>
         </div>
-      </form>
+      </div>
+
+      <div class="formRow">
+        <div class="formLabel">What’s the impact?</div>
+        <div class="optGrid">
+          <label class="opt">
+            <input type="radio" name="supportImpact" value="Blocking — I can’t continue what I’m trying to do">
+            <div class="opt__text">Blocking — I can’t continue what I’m trying to do</div>
+          </label>
+          <label class="opt">
+            <input type="radio" name="supportImpact" value="High — important feature not working right">
+            <div class="opt__text">High — important feature not working right</div>
+          </label>
+          <label class="opt">
+            <input type="radio" name="supportImpact" value="Medium — annoying but workaround exists">
+            <div class="opt__text">Medium — annoying but workaround exists</div>
+          </label>
+          <label class="opt">
+            <input type="radio" name="supportImpact" value="Low — minor / cosmetic">
+            <div class="opt__text">Low — minor / cosmetic</div>
+          </label>
+        </div>
+      </div>
+
+      <div class="formRow">
+        <div class="formLabel">When did it start?</div>
+        <div class="optGrid">
+          <label class="opt">
+            <input type="radio" name="supportStartWhen" value="Just now">
+            <div class="opt__text">Just now</div>
+          </label>
+          <label class="opt">
+            <input type="radio" name="supportStartWhen" value="Today">
+            <div class="opt__text">Today</div>
+          </label>
+          <label class="opt">
+            <input type="radio" name="supportStartWhen" value="This week">
+            <div class="opt__text">This week</div>
+          </label>
+          <label class="opt">
+            <input type="radio" name="supportStartWhen" value="I’m not sure / it’s been a while">
+            <div class="opt__text">I’m not sure / it’s been a while</div>
+          </label>
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- =========================
+         TRAINING BLOCK (Q2-Q4)
+    ========================= -->
+    <div id="trainingBlock" style="display:none;">
+
+      <div class="formRow">
+        <div class="formLabel">What are you trying to do?</div>
+        <div class="optGrid">
+          <label class="opt"><input type="radio" name="trainingTrying" value="Add / manage contacts"><div class="opt__text">Add / manage contacts</div></label>
+          <label class="opt"><input type="radio" name="trainingTrying" value="Import contacts / business card scan"><div class="opt__text">Import contacts / business card scan</div></label>
+          <label class="opt"><input type="radio" name="trainingTrying" value="Organize lists / segments"><div class="opt__text">Organize lists / segments</div></label>
+          <label class="opt"><input type="radio" name="trainingTrying" value="Create tasks / Smart Feed"><div class="opt__text">Create tasks / Smart Feed</div></label>
+          <label class="opt"><input type="radio" name="trainingTrying" value="Build a journey / automation"><div class="opt__text">Build a journey / automation</div></label>
+          <label class="opt"><input type="radio" name="trainingTrying" value="Send messages (email / SMS)"><div class="opt__text">Send messages (email / SMS)</div></label>
+          <label class="opt"><input type="radio" name="trainingTrying" value="Calendar / scheduling"><div class="opt__text">Calendar / scheduling</div></label>
+          <label class="opt"><input type="radio" name="trainingTrying" value="Pipeline / projects"><div class="opt__text">Pipeline / projects</div></label>
+          <label class="opt"><input type="radio" name="trainingTrying" value="Branding / templates"><div class="opt__text">Branding / templates</div></label>
+          <label class="opt"><input type="radio" name="trainingTrying" value="Integrations (Google, etc.)"><div class="opt__text">Integrations (Google, etc.)</div></label>
+          <label class="opt"><input type="radio" name="trainingTrying" value="Something else"><div class="opt__text">Something else</div></label>
+        </div>
+      </div>
+
+      <div class="formRow">
+        <div class="formLabel">What kind of help do you want?</div>
+        <div class="optGrid">
+          <label class="opt"><input type="radio" name="trainingHelpType" value="Step-by-step instructions"><div class="opt__text">Step-by-step instructions</div></label>
+          <label class="opt"><input type="radio" name="trainingHelpType" value="Best-practice guidance (what’s the best way to do this?)"><div class="opt__text">Best-practice guidance (what’s the best way to do this?)</div></label>
+          <label class="opt"><input type="radio" name="trainingHelpType" value="I want someone to help set it up"><div class="opt__text">I want someone to help set it up</div></label>
+        </div>
+      </div>
+
+      <div class="formRow">
+        <div class="formLabel">How urgent is this?</div>
+        <div class="optGrid">
+          <label class="opt"><input type="radio" name="trainingUrgency" value="Right now"><div class="opt__text">Right now</div></label>
+          <label class="opt"><input type="radio" name="trainingUrgency" value="This week"><div class="opt__text">This week</div></label>
+          <label class="opt"><input type="radio" name="trainingUrgency" value="No rush"><div class="opt__text">No rush</div></label>
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- =========================
+         BILLING BLOCK (Q2-Q3)
+    ========================= -->
+    <div id="billingBlock" style="display:none;">
+
+      <div class="formRow">
+        <div class="formLabel">What is this about?</div>
+        <div class="optGrid">
+          <label class="opt"><input type="radio" name="billingAbout" value="Changing plans"><div class="opt__text">Changing plans</div></label>
+          <label class="opt"><input type="radio" name="billingAbout" value="Invoice / receipt"><div class="opt__text">Invoice / receipt</div></label>
+          <label class="opt"><input type="radio" name="billingAbout" value="Payment failed"><div class="opt__text">Payment failed</div></label>
+          <label class="opt"><input type="radio" name="billingAbout" value="Refund request"><div class="opt__text">Refund request</div></label>
+          <label class="opt"><input type="radio" name="billingAbout" value="Update billing details (card / address)"><div class="opt__text">Update billing details (card / address)</div></label>
+          <label class="opt"><input type="radio" name="billingAbout" value="Promo / discount code"><div class="opt__text">Promo / discount code</div></label>
+          <label class="opt"><input type="radio" name="billingAbout" value="Usage / tokens / add-ons"><div class="opt__text">Usage / tokens / add-ons</div></label>
+          <label class="opt"><input type="radio" name="billingAbout" value="Other"><div class="opt__text">Other</div></label>
+        </div>
+      </div>
+
+      <div class="formRow">
+        <div class="formLabel">How urgent is this?</div>
+        <div class="optGrid">
+          <label class="opt"><input type="radio" name="billingUrgency" value="Urgent — service is impacted"><div class="opt__text">Urgent — service is impacted</div></label>
+          <label class="opt"><input type="radio" name="billingUrgency" value="Soon — please respond when you can"><div class="opt__text">Soon — please respond when you can</div></label>
+          <label class="opt"><input type="radio" name="billingUrgency" value="General question"><div class="opt__text">General question</div></label>
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- =========================
+         FEATURE BLOCK (Q2-Q4)
+    ========================= -->
+    <div id="featureBlock" style="display:none;">
+
+      <div class="formRow">
+        <div class="formLabel">Where does this feature belong?</div>
+        <div class="optGrid">
+          <label class="opt"><input type="radio" name="featureWhere" value="Mobile app"><div class="opt__text">Mobile app</div></label>
+          <label class="opt"><input type="radio" name="featureWhere" value="Web app"><div class="opt__text">Web app</div></label>
+          <label class="opt"><input type="radio" name="featureWhere" value="Both"><div class="opt__text">Both</div></label>
+          <label class="opt"><input type="radio" name="featureWhere" value="Not sure"><div class="opt__text">Not sure</div></label>
+        </div>
+      </div>
+
+      <div class="formRow">
+        <div class="formLabel">What area is this related to?</div>
+        <div class="optGrid">
+          <label class="opt"><input type="radio" name="featureArea" value="Contacts"><div class="opt__text">Contacts</div></label>
+          <label class="opt"><input type="radio" name="featureArea" value="Tasks / Smart Feed"><div class="opt__text">Tasks / Smart Feed</div></label>
+          <label class="opt"><input type="radio" name="featureArea" value="Journeys / automation"><div class="opt__text">Journeys / automation</div></label>
+          <label class="opt"><input type="radio" name="featureArea" value="Messaging (email / SMS)"><div class="opt__text">Messaging (email / SMS)</div></label>
+          <label class="opt"><input type="radio" name="featureArea" value="Lists / filtering"><div class="opt__text">Lists / filtering</div></label>
+          <label class="opt"><input type="radio" name="featureArea" value="Calendar / scheduling"><div class="opt__text">Calendar / scheduling</div></label>
+          <label class="opt"><input type="radio" name="featureArea" value="Reporting / insights"><div class="opt__text">Reporting / insights</div></label>
+          <label class="opt"><input type="radio" name="featureArea" value="Integrations"><div class="opt__text">Integrations</div></label>
+          <label class="opt"><input type="radio" name="featureArea" value="Branding / templates"><div class="opt__text">Branding / templates</div></label>
+          <label class="opt"><input type="radio" name="featureArea" value="Other"><div class="opt__text">Other</div></label>
+        </div>
+      </div>
+
+      <div class="formRow">
+        <div class="formLabel">How important is this to you?</div>
+        <div class="optGrid">
+          <label class="opt"><input type="radio" name="featureImportance" value="Must-have"><div class="opt__text">Must-have</div></label>
+          <label class="opt"><input type="radio" name="featureImportance" value="Nice-to-have"><div class="opt__text">Nice-to-have</div></label>
+          <label class="opt"><input type="radio" name="featureImportance" value="Just an idea"><div class="opt__text">Just an idea</div></label>
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- =========================
+         GENERAL BLOCK (Q2)
+    ========================= -->
+    <div id="generalBlock" style="display:none;">
+
+      <div class="formRow">
+        <div class="formLabel">What’s this message about?</div>
+        <div class="optGrid">
+          <label class="opt"><input type="radio" name="generalAbout" value="General question"><div class="opt__text">General question</div></label>
+          <label class="opt"><input type="radio" name="generalAbout" value="Feedback"><div class="opt__text">Feedback</div></label>
+          <label class="opt"><input type="radio" name="generalAbout" value="Partnership / collaboration"><div class="opt__text">Partnership / collaboration</div></label>
+          <label class="opt"><input type="radio" name="generalAbout" value="Sales / demo / onboarding"><div class="opt__text">Sales / demo / onboarding</div></label>
+          <label class="opt"><input type="radio" name="generalAbout" value="Media / speaking / event inquiry"><div class="opt__text">Media / speaking / event inquiry</div></label>
+          <label class="opt"><input type="radio" name="generalAbout" value="Something else"><div class="opt__text">Something else</div></label>
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- DETAILS ALWAYS (Q6 etc) -->
+    <div class="formRow">
+      <div class="formLabel">Message / Details</div>
+      <textarea class="formTextarea" name="details"
+        placeholder="Type your message here..."
+        required></textarea>
+      <div id="detailsHint" class="formHint">
+        Type your message here.
+      </div>
+    </div>
+
+  </div><!-- /.modal__body -->
+
+  <div class="modal__foot">
+    <button type="button" class="btn btn--outline" data-close="1">Cancel</button>
+    <button type="submit" class="btn btn--primary">Send Message</button>
+  </div>
+</form>
+
+
     </div>
   </div>
 
@@ -2360,25 +2535,174 @@ document.addEventListener("keydown", (e)=>{
 });
 
 /* =========================
-   Support form behaviour: bug conditional block
+   Support form behaviour: branching flow
 ========================= */
 const supportForm = document.getElementById("supportForm");
-const bugBlock = document.getElementById("bugBlock");
+
+const supportBlock  = document.getElementById("supportBlock");
+const trainingBlock = document.getElementById("trainingBlock");
+const billingBlock  = document.getElementById("billingBlock");
+const featureBlock  = document.getElementById("featureBlock");
+const generalBlock  = document.getElementById("generalBlock");
+const detailsHint   = document.getElementById("detailsHint");
+
+function hideAllBranches(){
+  [supportBlock, trainingBlock, billingBlock, featureBlock, generalBlock].forEach(b=>{
+    if(b) b.style.display = "none";
+  });
+}
+
+function clearInputsInside(el){
+  if(!el) return;
+  el.querySelectorAll("input").forEach(inp=>{
+    if(inp.type === "radio" || inp.type === "checkbox"){
+      inp.checked = false;
+    } else {
+      inp.value = "";
+    }
+  });
+}
+
+function setDetailsHint(type){
+  if(!detailsHint) return;
+
+  if(type === "Support"){
+    detailsHint.textContent = "Please describe what happened, what you expected, and anything else that might help.";
+    return;
+  }
+  if(type === "Training"){
+    detailsHint.textContent = "Tell us what you’re trying to accomplish, where you got stuck, and what you’ve tried so far.";
+    return;
+  }
+  if(type === "Billing"){
+    detailsHint.textContent = "Tell us what you need and include anything helpful (invoice date, last 4 digits, etc.).";
+    return;
+  }
+  if(type === "Feature"){
+    detailsHint.textContent = "Describe what you’d want the feature to do, and what problem it solves.";
+    return;
+  }
+  detailsHint.textContent = "Type your message here.";
+}
 
 supportForm.addEventListener("change", (e)=>{
-  if(e.target.name === "need"){
-    bugBlock.style.display = (e.target.value === "Bug") ? "" : "none";
+  if(e.target.name !== "reachOutAbout") return;
+
+  // hide all
+  hideAllBranches();
+
+  // clear branch selections
+  [supportBlock, trainingBlock, billingBlock, featureBlock, generalBlock].forEach(clearInputsInside);
+
+  const v = e.target.value;
+
+  if(v === "Support"){
+    supportBlock.style.display = "";
+  } else if(v === "Training"){
+    trainingBlock.style.display = "";
+  } else if(v === "Billing"){
+    billingBlock.style.display = "";
+  } else if(v === "Feature"){
+    featureBlock.style.display = "";
+  } else if(v === "General"){
+    generalBlock.style.display = "";
   }
+  // Other = no block shown
+
+  setDetailsHint(v);
 });
 
 supportForm.addEventListener("submit", (e)=>{
   e.preventDefault();
+
+  // Require Q1 always
+  const reach = supportForm.querySelector('input[name="reachOutAbout"]:checked');
+  if(!reach){
+    alert("Please choose what you want to reach out about.");
+    return;
+  }
+
+  // Support requires all Support radios
+  if(reach.value === "Support"){
+    const required = [
+      'input[name="supportWhere"]:checked',
+      'input[name="supportIssueType"]:checked',
+      'input[name="supportImpact"]:checked',
+      'input[name="supportStartWhen"]:checked'
+    ];
+    const ok = required.every(sel => !!supportForm.querySelector(sel));
+    if(!ok){
+      alert("Please answer all support questions so we can help faster.");
+      return;
+    }
+  }
+
+  // Training requires all Training radios
+  if(reach.value === "Training"){
+    const required = [
+      'input[name="trainingTrying"]:checked',
+      'input[name="trainingHelpType"]:checked',
+      'input[name="trainingUrgency"]:checked'
+    ];
+    const ok = required.every(sel => !!supportForm.querySelector(sel));
+    if(!ok){
+      alert("Please answer all training questions so we can help faster.");
+      return;
+    }
+  }
+
+  // Billing requires all Billing radios
+  if(reach.value === "Billing"){
+    const required = [
+      'input[name="billingAbout"]:checked',
+      'input[name="billingUrgency"]:checked'
+    ];
+    const ok = required.every(sel => !!supportForm.querySelector(sel));
+    if(!ok){
+      alert("Please answer both billing questions so we can help faster.");
+      return;
+    }
+  }
+
+  // Feature requires all Feature radios
+  if(reach.value === "Feature"){
+    const required = [
+      'input[name="featureWhere"]:checked',
+      'input[name="featureArea"]:checked',
+      'input[name="featureImportance"]:checked'
+    ];
+    const ok = required.every(sel => !!supportForm.querySelector(sel));
+    if(!ok){
+      alert("Please answer all feature questions so we can route this properly.");
+      return;
+    }
+  }
+
+  // General requires the one General radio
+  if(reach.value === "General"){
+    const ok = !!supportForm.querySelector('input[name="generalAbout"]:checked');
+    if(!ok){
+      alert("Please tell us what your message is about.");
+      return;
+    }
+  }
+
+  // Details required always
+  const details = supportForm.querySelector('textarea[name="details"]');
+  if(!details || !details.value.trim()){
+    alert("Please include a message.");
+    return;
+  }
+
   // realistic UX: show quick confirmation (no backend here)
   closeModal(modalMessage);
   alert("Sent! Sarah will respond as soon as possible.");
+
   supportForm.reset();
-  bugBlock.style.display = "none";
+  hideAllBranches();
+  setDetailsHint("");
 });
+
 
 /* =========================
    SMART TASK DRAWER behaviour
