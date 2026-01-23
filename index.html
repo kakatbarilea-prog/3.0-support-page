@@ -1042,6 +1042,14 @@ body.customizeMode .widgetDropHint{ display:block; }
   overflow: hidden;
   background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
 }
+/* ✅ Flat mode: remove the outer "aiChat" box look so it becomes the widget content */
+.aiChat.aiChat--flat{
+  margin-top: 0;                 /* remove spacing that expected a title above */
+  border: none;                  /* remove outer border */
+  border-radius: 0;              /* let parent card radius be the radius */
+  overflow: visible;             /* card handles clipping already */
+  background: transparent;        /* no box background */
+}
 
 .aiChat__top{
   display:flex;
@@ -1785,9 +1793,11 @@ textarea.formTextarea:focus{
   </div>
   <div class="widgetDropHint" aria-hidden="true"></div>
 
-  <h2 class="card__title">Segwik AI</h2>
+  <!-- ✅ NO "Segwik AI" heading -->
+  <!-- ✅ NO outer aiChat box wrapper -->
+  <!-- ✅ Chat UI fills the widget card -->
 
-  <div class="aiChat" id="aiChat">
+  <div class="aiChat aiChat--flat" id="aiChat">
     <div class="aiChat__top">
       <div class="aiChat__brand">
         <div class="aiChat__logo" aria-hidden="true"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
