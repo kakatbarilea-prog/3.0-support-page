@@ -1032,6 +1032,237 @@ body.customizeMode .widgetDropHint{ display:block; }
   color: var(--muted);
 }
 .tip strong{ color: var(--text); }
+/* =========================
+   Segwik AI Chat (Success Guide widget section)
+========================= */
+.aiChat{
+  margin-top: 14px;
+  border: 1px solid rgba(230,235,242,.9);
+  border-radius: 14px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.aiChat__top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 10px;
+  padding: 12px 12px;
+  border-bottom: 1px solid var(--border);
+  background: #fff;
+}
+
+.aiChat__brand{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  min-width: 0;
+}
+.aiChat__logo{
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  box-shadow: 0 8px 20px rgba(59,130,246,.20);
+}
+.aiChat__logo i{ font-size: 16px; line-height: 1; }
+
+.aiChat__meta{
+  min-width: 0;
+  display:flex;
+  flex-direction:column;
+}
+.aiChat__title{
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+.aiChat__sub{
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+.aiChat__status{
+  display:flex;
+  align-items:center;
+  gap: 8px;
+  font-size: 11px;
+  color: #64748b;
+  white-space:nowrap;
+}
+.aiChat__dot{
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(34,197,94,.95);
+  box-shadow: 0 0 0 4px rgba(34,197,94,.10);
+}
+
+.aiChat__suggestions{
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  background: #fff;
+  display:flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.aiChip{
+  border: 1px solid rgba(59,130,246,.20);
+  background: rgba(59,130,246,.08);
+  color: #1d4ed8;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor:pointer;
+  transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+}
+.aiChip:hover{
+  transform: translateY(-1px);
+  background: rgba(59,130,246,.12);
+  box-shadow: 0 8px 20px rgba(16,24,40,.10);
+}
+
+.aiChat__thread{
+  padding: 12px;
+  display:flex;
+  flex-direction:column;
+  gap: 10px;
+  max-height: 240px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.aiMsg{
+  display:flex;
+  gap: 10px;
+  align-items:flex-start;
+}
+.aiMsg__avatar{
+  width: 30px;
+  height: 30px;
+  border-radius: 12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex: 0 0 auto;
+  font-size: 13px;
+  font-weight: 900;
+}
+.aiMsg--ai .aiMsg__avatar{
+  background: rgba(59,130,246,.10);
+  color: var(--primary);
+  border: 1px solid rgba(59,130,246,.18);
+}
+.aiMsg--user{
+  flex-direction: row-reverse;
+}
+.aiMsg--user .aiMsg__avatar{
+  background: rgba(148,163,184,.12);
+  color:#334155;
+  border: 1px solid rgba(148,163,184,.20);
+}
+
+.aiMsg__bubble{
+  max-width: 85%;
+  border-radius: 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+}
+.aiMsg--user .aiMsg__bubble{
+  background: rgba(59,130,246,.10);
+  border-color: rgba(59,130,246,.20);
+}
+.aiMsg__bubble p{
+  font-size: 12px;
+  color: #334155;
+  line-height: 1.45;
+  margin:0;
+}
+.aiMsg__time{
+  margin-top: 6px;
+  font-size: 10px;
+  color: #94a3b8;
+}
+
+.aiChat__composer{
+  padding: 12px;
+  border-top: 1px solid var(--border);
+  background: #fff;
+  display:flex;
+  gap: 10px;
+  align-items:center;
+}
+.aiInput{
+  flex: 1 1 auto;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 0 12px;
+  font-size: 13px;
+  outline:none;
+}
+.aiInput:focus{
+  border-color: rgba(59,130,246,.5);
+  box-shadow: 0 0 0 4px rgba(59,130,246,.10);
+}
+.aiSend{
+  width: 44px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: var(--primary);
+  color:#fff;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow: var(--shadow-sm);
+  transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+}
+.aiSend:hover{
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+  filter: brightness(.96);
+}
+.aiSend:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+  transform:none;
+  box-shadow:none;
+}
+
+/* subtle typing indicator */
+.aiTyping{
+  display:inline-flex;
+  gap: 5px;
+  align-items:center;
+}
+.aiTyping span{
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(59,130,246,.55);
+  display:inline-block;
+  animation: aiDot 1.1s infinite ease-in-out;
+}
+.aiTyping span:nth-child(2){ animation-delay: .15s; }
+.aiTyping span:nth-child(3){ animation-delay: .30s; }
+
+@keyframes aiDot{
+  0%,100%{ transform: translateY(0); opacity:.6; }
+  50%{ transform: translateY(-2px); opacity:1; }
+}
 
 /* =========================
    Floating widget
@@ -1546,7 +1777,56 @@ textarea.formTextarea:focus{
       <!-- LEFT COLUMN -->
       <aside class="col col--left">
 
-        <!-- MOVED: Success Guide (top left) -->
+
+<section class="card widget" data-widget="aiChatBot">
+  <div class="widgetTools" aria-hidden="true">
+    <button class="widgetToolBtn widgetMove" title="Drag widget" aria-label="Drag widget"><i class="fa-solid fa-grip-vertical"></i></button>
+    <button class="widgetToolBtn widgetRemove" title="Remove widget" aria-label="Remove widget"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div class="widgetDropHint" aria-hidden="true"></div>
+
+  <h2 class="card__title">Segwik AI</h2>
+
+  <div class="aiChat" id="aiChat">
+    <div class="aiChat__top">
+      <div class="aiChat__brand">
+        <div class="aiChat__logo" aria-hidden="true"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+        <div class="aiChat__meta">
+          <div class="aiChat__title">Chat with Segwik AI</div>
+          <div class="aiChat__sub">Ask questions, get quick wins, or troubleshoot — instantly.</div>
+        </div>
+      </div>
+
+      <div class="aiChat__status" title="Online">
+        <span class="aiChat__dot" aria-hidden="true"></span>
+        Online
+      </div>
+    </div>
+
+    <div class="aiChat__suggestions" aria-label="Suggested questions">
+      <button type="button" class="aiChip" data-ai-suggest="What should I do first today?">What should I do first today?</button>
+      <button type="button" class="aiChip" data-ai-suggest="How do I import contacts the right way?">How do I import contacts the right way?</button>
+      <button type="button" class="aiChip" data-ai-suggest="What’s a Smart Journey and when should I use it?">What’s a Smart Journey?</button>
+      <button type="button" class="aiChip" data-ai-suggest="How can I get more follow-ups done automatically?">Help me automate follow-ups</button>
+    </div>
+
+    <div class="aiChat__thread" id="aiThread" aria-label="Chat thread">
+      <!-- initial message injected by JS -->
+    </div>
+
+    <div class="aiChat__composer">
+      <input id="aiInput" class="aiInput" type="text" placeholder="Ask Segwik AI anything..." autocomplete="off" />
+      <button id="aiSend" class="aiSend" type="button" aria-label="Send message">
+        <i class="fa-solid fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+</section>
+
+
+
+        <!-- MOVED: Success Guide (top 
+        left) -->
 <section class="card widget" data-widget="successGuide">
   <div class="widgetTools" aria-hidden="true">
     <button class="widgetToolBtn widgetMove" title="Drag widget" aria-label="Drag widget"><i class="fa-solid fa-grip-vertical"></i></button>
@@ -1555,6 +1835,7 @@ textarea.formTextarea:focus{
   <div class="widgetDropHint" aria-hidden="true"></div>
 
   <h2 class="card__title">Your Success Guide</h2>
+
 
 
           <div class="guide">
@@ -3514,6 +3795,194 @@ function mapReadyTasksToDrawer(){
   });
 }
 mapReadyTasksToDrawer();
+/* =========================
+   Segwik AI Chat (inside Success Guide)
+   - suggested question click -> believable answers
+   - user typed questions -> randomized helpful responses
+========================= */
+(function initSegwikAIChat(){
+  const thread = document.getElementById("aiThread");
+  const input  = document.getElementById("aiInput");
+  const send   = document.getElementById("aiSend");
+
+  if(!thread || !input || !send) return;
+
+  function nowTime(){
+    const d = new Date();
+    const hh = String(d.getHours()).padStart(2,"0");
+    const mm = String(d.getMinutes()).padStart(2,"0");
+    return `${hh}:${mm}`;
+  }
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, m => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"
+    }[m]));
+  }
+
+  function scrollToBottom(){
+    requestAnimationFrame(()=>{ thread.scrollTop = thread.scrollHeight; });
+  }
+
+  function addMsg(role, text, opts={}){
+    const wrap = document.createElement("div");
+    wrap.className = `aiMsg ${role === "ai" ? "aiMsg--ai" : "aiMsg--user"}`;
+
+    const avatar = document.createElement("div");
+    avatar.className = "aiMsg__avatar";
+    avatar.textContent = role === "ai" ? "AI" : "You";
+
+    const bubble = document.createElement("div");
+    bubble.className = "aiMsg__bubble";
+
+    const p = document.createElement("p");
+    p.innerHTML = escapeHtml(text).replace(/\n/g,"<br>");
+    bubble.appendChild(p);
+
+    const time = document.createElement("div");
+    time.className = "aiMsg__time";
+    time.textContent = opts.time || nowTime();
+    bubble.appendChild(time);
+
+    wrap.appendChild(avatar);
+    wrap.appendChild(bubble);
+
+    thread.appendChild(wrap);
+    scrollToBottom();
+  }
+
+  function addTyping(){
+    const wrap = document.createElement("div");
+    wrap.className = "aiMsg aiMsg--ai";
+    wrap.setAttribute("data-typing","1");
+
+    const avatar = document.createElement("div");
+    avatar.className = "aiMsg__avatar";
+    avatar.textContent = "AI";
+
+    const bubble = document.createElement("div");
+    bubble.className = "aiMsg__bubble";
+
+    const p = document.createElement("p");
+    p.innerHTML = `
+      <span class="aiTyping" aria-label="Typing">
+        <span></span><span></span><span></span>
+      </span>
+    `;
+    bubble.appendChild(p);
+
+    wrap.appendChild(avatar);
+    wrap.appendChild(bubble);
+
+    thread.appendChild(wrap);
+    scrollToBottom();
+  }
+
+  function removeTyping(){
+    const t = thread.querySelector('[data-typing="1"]');
+    if(t) t.remove();
+  }
+
+  // Suggested question -> deterministic but varied “real” responses
+  const suggestedAnswers = {
+    "What should I do first today?":[
+      "Here’s a strong first 15 minutes:\n1) Confirm your Success Session is booked.\n2) Import your top 25 contacts.\n3) Set 3 follow-ups for this week.\nIf you want, I can suggest which contacts to import first based on your business type.",
+      "Quick win order:\n• Book (or confirm) your onboarding meeting\n• Finish Company Basics\n• Import 10 contacts\n• Add 3 follow-ups\nThat sequence makes the rest of Segwik feel *way* easier."
+    ],
+    "How do I import contacts the right way?":[
+      "Best practice:\n1) Start small (10–25 contacts)\n2) Keep first/last name + email/phone clean\n3) Tag by contact type (Client / Partner / Vendor)\n4) Import → then immediately queue follow-ups\nIf you tell me where your contacts live (Google / iCloud / Outlook), I’ll outline the cleanest export path.",
+      "Do this to avoid messy data:\n• Remove duplicates first\n• Make sure emails & phone numbers are in their own columns\n• Import a *test batch* of 10\n• Then import the full list\nSegwik works best when the first import is clean and intentional."
+    ],
+    "What’s a Smart Journey and when should I use it?":[
+      "A Smart Journey is your “repeatable relationship process.” Use it when something happens over and over:\n• New lead comes in\n• After networking event\n• After an intro/referral\n• After a meeting\nJourneys keep follow-ups consistent without you remembering everything.",
+      "Use Smart Journeys when you want *consistency*:\n1 trigger → a series of tasks/messages over time.\nExample: “Met at event” → same-day follow-up, 3-day check-in, 2-week reconnect."
+    ],
+    "How can I get more follow-ups done automatically?":[
+      "Two moves unlock this:\n1) Build 1 Journey for your most common scenario (ex: “Met at networking event”).\n2) Turn your follow-up into a template (short email/SMS).\nThat’s how Segwik stops being a CRM and starts acting like a sidekick.",
+      "Start with automation *assist* (not full autopilot):\n• Segwik creates the tasks\n• you approve/send the message\nYou’ll feel in control, but you’re no longer relying on memory."
+    ]
+  };
+
+  // Randomized responses for custom typed questions (believable + helpful)
+  const randomReplyPool = [
+    "Got it — here’s the clean way to think about that:\n1) Identify the goal\n2) Break it into 3 actions\n3) Automate or template the repeatable part\nIf you tell me what business you’re in, I can tailor this more.",
+    "That’s a good question. In Segwik terms, this usually comes down to: Contacts → Follow-ups → Journeys.\nWant me to suggest the quickest next action that creates momentum?",
+    "Here’s a practical answer:\n• Do the simplest version first\n• Confirm it works\n• Then layer automation\nMost people try to overbuild too early — we’ll keep it clean.",
+    "If your goal is consistency, the trick is:\n1) Create a repeatable workflow\n2) Make the follow-up easy\n3) Use reminders + templates\nI can outline a simple setup that takes 10 minutes.",
+    "Yes — and you’re thinking about it the right way.\nThis is usually solved by setting one clear trigger (like meeting someone) and letting Segwik queue the follow-up steps automatically.",
+    "Here’s what I’d do if I was sitting next to you:\n• pick the next most valuable contact\n• create a single follow-up\n• optionally attach a mini Journey\nThat’s the fastest path to results."
+  ];
+
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  function respondAI(text, deterministicKey=null){
+    send.disabled = true;
+    addTyping();
+
+    const delay = 520 + Math.floor(Math.random()*520);
+    setTimeout(()=>{
+      removeTyping();
+
+      if(deterministicKey && suggestedAnswers[deterministicKey]){
+        addMsg("ai", pick(suggestedAnswers[deterministicKey]));
+      }else{
+        // lightly reference user question for realism
+        const opener = pick([
+          "Totally — ",
+          "Yes. ",
+          "Okay — ",
+          "Makes sense. ",
+          "Good question. "
+        ]);
+
+        const tailoredNudge = (text && text.length > 6)
+          ? `You said: "${text.trim().slice(0,64)}${text.trim().length>64?"…":""}"\n\n`
+          : "";
+
+        addMsg("ai", opener + tailoredNudge + pick(randomReplyPool));
+      }
+
+      send.disabled = false;
+      input.focus();
+    }, delay);
+  }
+
+  function sendUserMessage(message, deterministicKey=null){
+    const cleaned = String(message || "").trim();
+    if(!cleaned) return;
+
+    addMsg("user", cleaned);
+    respondAI(cleaned, deterministicKey);
+  }
+
+  // Initial welcome message (realistic)
+  addMsg("ai",
+    "Hey Sarah — I’m Segwik AI.\nIf you want fast progress: start with 10 contacts, then create 3 follow-ups.\n\nTap a question above or type anything you want help with."
+  );
+
+  // Suggested chips click
+  document.querySelectorAll("[data-ai-suggest]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const q = btn.getAttribute("data-ai-suggest");
+      if(!q) return;
+      sendUserMessage(q, q);
+    });
+  });
+
+  // Send button
+  send.addEventListener("click", ()=>{
+    sendUserMessage(input.value);
+    input.value = "";
+  });
+
+  // Enter to send
+  input.addEventListener("keydown",(e)=>{
+    if(e.key === "Enter"){
+      e.preventDefault();
+      send.click();
+    }
+  });
+})();
 
 /* =========================
    DASHBOARD WIDGET DRAG + DROP (SMOOTH + GREEN DROP CONFIRMATION)
