@@ -270,11 +270,32 @@ body.customizeMode .widget:active{
   position: fixed !important;
   z-index: 999999 !important;
   pointer-events: none !important;
+
   width: var(--dragW, auto);
-  left: 0; top: 0;
+  left: 0;
+  top: 0;
+
   transform: translate3d(var(--dragX, 0px), var(--dragY, 0px), 0) rotate(.25deg) !important;
-  opacity: .95;
+
+  opacity: .96;
+  will-change: transform;
+  backface-visibility: hidden;
+  transform-origin: center;
+
+  /* ✅ remove transition during drag (prevents lag) */
+  transition: none !important;
 }
+
+/* ✅ no text selection while dragging */
+body.draggingWidgets{
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grabbing !important;
+}
+body.draggingWidgets *{
+  cursor: grabbing !important;
+}
+
 .dropPlaceholder{
   border: 2px dashed rgba(59,130,246,.45);
   border-radius: 16px;
@@ -1556,7 +1577,7 @@ textarea.formTextarea:focus{
         </section>
 
         <!-- UPDATED: Projects + phases -->
-       <section class="card widget" data-widget="successGuide">
+       <section class="card widget" data-widget="projects">
   <div class="widgetTools" aria-hidden="true">
     <button class="widgetToolBtn widgetMove" title="Drag widget" aria-label="Drag widget"><i class="fa-solid fa-grip-vertical"></i></button>
     <button class="widgetToolBtn widgetRemove" title="Remove widget" aria-label="Remove widget"><i class="fa-solid fa-xmark"></i></button>
@@ -1865,7 +1886,7 @@ textarea.formTextarea:focus{
           </div>
         </section>
 
-        <section class="card widget" data-widget="successGuide">
+       <section class="card widget" data-widget="recentActivity">
   <div class="widgetTools" aria-hidden="true">
     <button class="widgetToolBtn widgetMove" title="Drag widget" aria-label="Drag widget"><i class="fa-solid fa-grip-vertical"></i></button>
     <button class="widgetToolBtn widgetRemove" title="Remove widget" aria-label="Remove widget"><i class="fa-solid fa-xmark"></i></button>
@@ -3498,498 +3519,41 @@ mapReadyTasksToDrawer();
    DASHBOARD WIDGET DRAG + DROP (SMOOTH + GREEN DROP CONFIRMATION)
 ========================= */
 
-let dragState = {
-  active: false,
-  fromDrawer: false,
-  dragWidgetEl: null,     // original widget (if dragging existing)
-  ghostEl: null,          // floating copy
-  placeholderEl: null,    // drop placeholder
-  originCol: null,
-  originNextSibling: null,
-  targetCol: null,
-  lastX: 0,
-  lastY: 0,
-  raf: 0
-};
-
-function setCustomizeMode(on){
-  document.body.classList.toggle("customizeMode", !!on);
-
-  const actions = document.getElementById("customizeActions");
-  const btnCustomize = document.getElementById("btnCustomize");
-btnCustomize.addEventListener("click", ()=>{
-  setCustomizeMode(true);
-});
-btnCancelWidgets.addEventListener("click", ()=>{
-  // Cancel = revert by reloading snapshot if you already have it
-  // For this mock: simply exit customize mode
-  setCustomizeMode(false);
-});
-
-  if(actions) actions.style.display = on ? "flex" : "none";
-  if(btnCustomize) btnCustomize.style.display = on ? "none" : "";
-}
-
+/* ---------- Helpers ---------- */
 function getCols(){
   return Array.from(document.querySelectorAll(".col"));
 }
-
-function getClosestColFromPoint(x,y){
-  const cols = getCols();
-  let best = null;
-  let bestDist = Infinity;
-  cols.forEach(c=>{
-    const r = c.getBoundingClientRect();
-    const cx = (r.left + r.right)/2;
-    const cy = (r.top + r.bottom)/2;
-    const d = Math.hypot(cx-x, cy-y);
-    if(d < bestDist){
-      bestDist = d;
-      best = c;
-    }
-  });
-  return best;
+function getAllWidgets(){
+  return Array.from(document.querySelectorAll(".widget[data-widget]")).filter(w => w.style.display !== "none");
+}
+function closestWidgetHandle(target){
+  return target.closest(".widgetMove");
+}
+function closestWidget(target){
+  return target.closest(".widget.widget[data-widget]");
+}
+function humanizeWidgetTitle(key){
+  return (key || "Widget")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/_/g," ")
+    .replace(/\b\w/g, c => c.toUpperCase());
 }
 
-function createPlaceholderLike(widgetEl){
-  const ph = document.createElement("div");
-  ph.className = "dropPlaceholder";
-  const r = widgetEl.getBoundingClientRect();
-  ph.style.height = Math.max(72, r.height) + "px";
-  return ph;
-}
-
-function ensurePlaceholderInCol(col, placeholder){
-  if(!col || !placeholder) return;
-  if(placeholder.parentElement !== col){
-    col.appendChild(placeholder);
-  }
-}
-
-function clearValidDrop(){
-  document.querySelectorAll(".dropPlaceholder.is-valid-drop").forEach(el=>{
-    el.classList.remove("is-valid-drop");
-  });
-}
-
-function setValidDrop(placeholder){
-  clearValidDrop();
-  if(placeholder) placeholder.classList.add("is-valid-drop");
-}
-
-function buildGhost(widgetEl){
-  const ghost = widgetEl.cloneNode(true);
-  ghost.classList.add("is-drag-ghost");
-  ghost.style.setProperty("--dragW", widgetEl.getBoundingClientRect().width + "px");
-  return ghost;
-}
-
-function moveGhostSmooth(x,y){
-  dragState.lastX = x;
-  dragState.lastY = y;
-
-  if(dragState.raf) return;
-  dragState.raf = requestAnimationFrame(()=>{
-    dragState.raf = 0;
-    if(!dragState.ghostEl) return;
-
-    dragState.ghostEl.style.setProperty("--dragX", (dragState.lastX - 20) + "px");
-    dragState.ghostEl.style.setProperty("--dragY", (dragState.lastY - 20) + "px");
-  });
-}
-
-function startDraggingWidget(widgetEl, startX, startY, fromDrawer=false){
-  if(!document.body.classList.contains("customizeMode")) return;
-
-  dragState.active = true;
-  dragState.fromDrawer = !!fromDrawer;
-  dragState.dragWidgetEl = fromDrawer ? null : widgetEl;
-
-  if(!fromDrawer){
-    dragState.originCol = widgetEl.parentElement;
-    dragState.originNextSibling = widgetEl.nextElementSibling;
-  } else {
-    dragState.originCol = null;
-    dragState.originNextSibling = null;
-  }
-
-  const ghost = buildGhost(widgetEl);
-  dragState.ghostEl = ghost;
-  document.body.appendChild(ghost);
-
-  moveGhostSmooth(startX, startY);
-
-  // placeholder
-  const placeholder = createPlaceholderLike(widgetEl);
-  dragState.placeholderEl = placeholder;
-
-  // target column from start point
-  const col = getClosestColFromPoint(startX, startY);
-  dragState.targetCol = col;
-  ensurePlaceholderInCol(col, placeholder);
-  setValidDrop(placeholder);
-
-  // if dragging an existing widget, temporarily hide it
-  if(widgetEl && !fromDrawer){
-    widgetEl.classList.add("widgetRemoved");
-  }
-
-  document.addEventListener("mousemove", onDragMove);
-  document.addEventListener("mouseup", onDragEnd);
-}
-
-function onDragMove(e){
-  if(!dragState.active) return;
-  moveGhostSmooth(e.clientX, e.clientY);
-
-  const col = getClosestColFromPoint(e.clientX, e.clientY);
-  if(col && col !== dragState.targetCol){
-    dragState.targetCol = col;
-    ensurePlaceholderInCol(col, dragState.placeholderEl);
-  }
-
-  // ✅ Green highlight = always the placeholder itself
-  setValidDrop(dragState.placeholderEl);
-}
-
-function onDragEnd(){
-  if(!dragState.active) return;
-
-  document.removeEventListener("mousemove", onDragMove);
-  document.removeEventListener("mouseup", onDragEnd);
-
-  clearValidDrop();
-
-  // remove ghost
-  if(dragState.ghostEl){
-    dragState.ghostEl.remove();
-  }
-
-  // if dragging existing widget
-  if(!dragState.fromDrawer && dragState.dragWidgetEl){
-    dragState.dragWidgetEl.classList.remove("widgetRemoved");
-    if(dragState.placeholderEl && dragState.placeholderEl.parentElement){
-      dragState.placeholderEl.parentElement.insertBefore(dragState.dragWidgetEl, dragState.placeholderEl);
-    }
-  }
-
-  // if dragging from drawer: placeholder becomes real widget if dropped
-  if(dragState.fromDrawer && dragState.placeholderEl && dragState.placeholderEl.parentElement){
-    const real = buildRealWidgetFromPendingTile();
-    if(real){
-      dragState.placeholderEl.parentElement.insertBefore(real, dragState.placeholderEl);
-      bindWidgetControls(real);
-    }
-  }
-
-  // remove placeholder
-  if(dragState.placeholderEl){
-    dragState.placeholderEl.remove();
-  }
-
-  dragState = {
-    active:false, fromDrawer:false, dragWidgetEl:null, ghostEl:null, placeholderEl:null,
-    originCol:null, originNextSibling:null, targetCol:null, lastX:0, lastY:0, raf:0
-  };
-
-  // allow cancel overlay to disappear
-  closePlaceWidgetCancel();
-}
-
-
-/* =========================
-   SMART FEED (LIMIT 5 + DISMISS ROTATE)
-========================= */
-
-// 1) Define ALL smart feed items (same content you already had)
-const smartFeedItems = [
-  {
-    id: "sf-1",
-    type: "alert",
-    iconHtml: "!",
-    title: "Schedule your Success Call",
-    desc: "Book your first onboarding session so we can kick off your setup the right way.",
-    button: { style: "primary", label: "Schedule Now" }
-  },
-  {
-    id: "sf-2",
-    type: "tip",
-    iconHtml: `<i class="fa-solid fa-screwdriver-wrench"></i>`,
-    title: "Complete Tech Intake Form",
-    desc: "Tell us what tools you use today so we can personalize your system and automations.",
-    button: { style: "primary", label: "Start" }
-  },
-  {
-    id: "sf-3",
-    type: "tip",
-    iconHtml: `<i class="fa-solid fa-building"></i>`,
-    title: "Complete your Company Basics",
-    desc: "Add your company info so your profile, digital card, and onboarding setup stay accurate.",
-    button: { style: "primary", label: "Start" }
-  },
-  {
-    id: "sf-4",
-    type: "tip",
-    iconHtml: `<i class="fa-solid fa-palette"></i>`,
-    title: "Fill In Branding Form",
-    desc: "Share logo/colors/style so we can design a digital card that matches your brand.",
-    button: { style: "primary", label: "Start" }
-  },
-  {
-    id: "sf-5",
-    type: "default",
-    iconHtml: `<i class="fa-solid fa-image"></i>`,
-    title: "Identify and Collect Background Image",
-    desc: "Pick a clean background image that fits your brand (used in your digital card and screens).",
-    button: { style: "outline", label: "Mark complete" }
-  },
-  {
-    id: "sf-6",
-    type: "default",
-    iconHtml: `<i class="fa-solid fa-link"></i>`,
-    title: "Identify and Collect Social Media URLs",
-    desc: "Gather your exact social links so we can connect them to your profile and digital card.",
-    button: { style: "outline", label: "Mark complete" }
-  },
-  {
-    id: "sf-7",
-    type: "default",
-    iconHtml: `<i class="fa-solid fa-folder-open"></i>`,
-    title: "Identify and Collect other Digital Marketing Assets or Links",
-    desc: "Bring any important links (menus, portfolio, booking, reviews, PDFs, Drive links).",
-    button: { style: "outline", label: "Mark complete" }
-  },
-  {
-    id: "sf-8",
-    type: "default",
-    iconHtml: `<i class="fa-solid fa-address-card"></i>`,
-    title: "Collect and Prepare Business Cards",
-    desc: "Set aside a small stack so we can fine-tune scanning + data capture for your workflow.",
-    button: { style: "outline", label: "Mark complete" }
-  }
-];
-
-// 2) Maintain state: dismissed IDs + queue ordering
-const dismissedFeed = new Set();
-
-// 3) Render: always show next 5 NON-dismissed items
-function renderSmartFeed() {
-  const feedEl = document.getElementById("smartFeed");
-  if (!feedEl) return;
-
-  const remaining = smartFeedItems.filter(it => !dismissedFeed.has(it.id));
-  const visible = remaining.slice(0, 5);
-
-  // Empty state
-  if (visible.length === 0) {
-    feedEl.innerHTML = `
-      <div class="feed-item">
-        <div class="feed-item__icon"><i class="fa-solid fa-circle-check"></i></div>
-        <div class="feed-item__body">
-          <h3>You’re all caught up</h3>
-          <p>No new recommendations right now.</p>
-        </div>
-      </div>
-    `;
-    return;
-  }
-
-  // Normal feed
-  feedEl.innerHTML = visible.map(item => {
-    const typeClass =
-      item.type === "alert" ? "feed-item--alert" :
-      item.type === "tip" ? "feed-item--tip" : "";
-
-    const btnClass = item.button.style === "primary" ? "btn--primary" : "btn--outline";
-
-    return `
-      <div class="feed-item ${typeClass}" data-feed-id="${item.id}">
-        <div class="feed-item__icon">${item.iconHtml}</div>
-
-        <div class="feed-item__body">
-          <h3>${item.title}</h3>
-          <p>${item.desc}</p>
-          <button class="btn ${btnClass} btn--sm">${item.button.label}</button>
-        </div>
-
-        <button class="iconbtn js-feed-dismiss" aria-label="Dismiss" title="Dismiss">✕</button>
-      </div>
-    `;
-  }).join("");
-
-  // Bind dismiss buttons
-  feedEl.querySelectorAll(".js-feed-dismiss").forEach(btn => {
-    btn.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const row = btn.closest("[data-feed-id]");
-      if (!row) return;
-
-      const id = row.getAttribute("data-feed-id");
-     // Animate out first, THEN dismiss + re-render
-row.classList.add("feed-item--dismissing");
-
-setTimeout(() => {
-  dismissedFeed.add(id);
-  renderSmartFeed();
-}, 230);
-
-    });
-  });
-}
-
-// initial render
-renderSmartFeed();
-/* =========================
-   DASHBOARD WIDGET CUSTOMIZE MODE (FIXED)
-   - True cursor-follow drag (no HTML5 drag)
-   - Placeholder shifts widgets so placement is obvious
-   - Works across ALL columns including right column
-   - Cancel restores original layout (including removed)
-   - Save keeps new layout and exits customize mode
-   - Auto-scroll near viewport edges while dragging
-   - Mouse wheel still scrolls while dragging
-========================= */
-
+/* ---------- Customize mode gating ---------- */
 const btnCustomize = document.getElementById("btnCustomize");
 const customizeActions = document.getElementById("customizeActions");
 const btnAddWidget = document.getElementById("btnAddWidget");
 const btnSaveWidgets = document.getElementById("btnSaveWidgets");
 const btnCancelWidgets = document.getElementById("btnCancelWidgets");
-
 const widgetDrawer = document.getElementById("widgetDrawer");
-const btnWidgetDrawerDone = document.getElementById("btnWidgetDrawerDone");
-let pendingDrawerWidgetKey = null;
-
-function openWidgetDrawer(){
-  widgetDrawer.classList.add("drawer--open");
-  widgetDrawer.setAttribute("aria-hidden","false");
-  document.body.style.overflow = "hidden";
-}
-
-function closeWidgetDrawer(){
-  widgetDrawer.classList.remove("drawer--open");
-  widgetDrawer.setAttribute("aria-hidden","true");
-  document.body.style.overflow = "";
-}
-
-// close drawer on backdrop or close btn
-document.querySelectorAll("[data-widget-drawer-close='1']").forEach(el=>{
-  el.addEventListener("click", closeWidgetDrawer);
-});
-
-btnWidgetDrawerDone.addEventListener("click", closeWidgetDrawer);
-
-function openPlaceWidgetCancel(){
-  const el = document.getElementById("placeWidgetCancel");
-  if(el) el.style.display = "block";
-}
-function closePlaceWidgetCancel(){
-  const el = document.getElementById("placeWidgetCancel");
-  if(el) el.style.display = "none";
-}
-
-// X cancels placing widget
-document.getElementById("btnCancelPlaceWidget").addEventListener("click", ()=>{
-  // simply terminate current drag and remove placeholder/ghost
-  document.dispatchEvent(new MouseEvent("mouseup"));
-});
-
-// ESC cancels placing widget too
-document.addEventListener("keydown",(e)=>{
-  if(e.key === "Escape" && pendingDrawerWidgetKey){
-    document.dispatchEvent(new MouseEvent("mouseup"));
-  }
-});
-
-/* Build a realistic widget card from drawer key */
-function buildRealWidgetFromPendingTile(){
-  if(!pendingDrawerWidgetKey) return null;
-
-  const key = pendingDrawerWidgetKey;
-  pendingDrawerWidgetKey = null;
-
-  const section = document.createElement("section");
-  section.className = "card widget";
-  section.setAttribute("data-widget", key);
-
-  section.innerHTML = `
-    <div class="widgetTools" aria-hidden="true">
-      <button class="widgetToolBtn widgetMove" title="Drag widget" aria-label="Drag widget"><i class="fa-solid fa-grip-vertical"></i></button>
-      <button class="widgetToolBtn widgetRemove" title="Remove widget" aria-label="Remove widget"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="widgetDropHint" aria-hidden="true"></div>
-
-    <div class="card__subtitle">
-      <h2 class="card__title">${humanizeWidgetTitle(key)}</h2>
-      <p>Widget preview (demo content)</p>
-    </div>
-
-    <div style="border:1px solid var(--border); border-radius:12px; padding:12px; background:#fff;">
-      <div style="height:10px; border-radius:999px; background:rgba(148,163,184,.28); width:78%;"></div>
-      <div style="margin-top:10px; height:10px; border-radius:999px; background:rgba(148,163,184,.22); width:62%;"></div>
-      <div style="margin-top:14px; display:flex; gap:8px;">
-        <div style="height:22px; width:70px; border-radius:999px; background:rgba(59,130,246,.14);"></div>
-        <div style="height:22px; width:56px; border-radius:999px; background:rgba(34,197,94,.14);"></div>
-      </div>
-    </div>
-  `;
-
-  return section;
-}
-
-function humanizeWidgetTitle(key){
-  const map = {
-    contacts: "Contacts",
-    importantContacts: "Important Contacts",
-    vcards: "vCards",
-    messages: "Messages",
-    followups: "Follow-ups",
-    networks: "Networks",
-    groups: "Groups",
-    importantDates: "Important Dates",
-    referrals: "Referrals"
-  };
-  return map[key] || "Widget";
-}
-
-/* Bind move/remove controls on newly created widgets */
-function bindWidgetControls(widgetEl){
-  const moveBtn = widgetEl.querySelector(".widgetMove");
-  const removeBtn = widgetEl.querySelector(".widgetRemove");
-
-  if(moveBtn){
-    moveBtn.addEventListener("mousedown",(e)=>{
-      e.preventDefault();
-      e.stopPropagation();
-      startDraggingWidget(widgetEl, e.clientX, e.clientY, false);
-    });
-  }
-
-  if(removeBtn){
-    removeBtn.addEventListener("click",(e)=>{
-      e.preventDefault();
-      e.stopPropagation();
-      widgetEl.remove();
-    });
-  }
-}
 
 let customizeMode = false;
 let widgetLayoutSnapshot = null;
 
-function getCols(){
-  return Array.from(document.querySelectorAll(".col"));
-}
-function getWidgets(){
-  return Array.from(document.querySelectorAll(".widget[data-widget]"));
-}
-
-/* ---------- Snapshot / Restore ---------- */
 function snapshotLayout(){
   const cols = getCols();
   return cols.map(col => ({
-    colKey: col.className, // includes col--left etc
+    colKey: col.className,
     widgetIds: Array.from(col.querySelectorAll(".widget[data-widget]"))
       .filter(w => w.style.display !== "none")
       .map(w => w.getAttribute("data-widget"))
@@ -3998,376 +3562,457 @@ function snapshotLayout(){
 
 function restoreLayout(snapshot){
   if(!snapshot) return;
-
-  // map widgets by unique data-widget
-  const map = new Map();
-  getWidgets().forEach(w => map.set(w.getAttribute("data-widget"), w));
+  const cols = getCols();
 
   snapshot.forEach(s => {
-    const selector = "." + s.colKey.split(" ").join(".");
-    const col = document.querySelector(selector);
+    const col = cols.find(c => c.className === s.colKey);
     if(!col) return;
 
-    s.widgetIds.forEach(id => {
-      const w = map.get(id);
-      if(w){
-        w.style.display = "";
-        w.dataset.removed = "0";
-        col.appendChild(w);
-      }
+    s.widgetIds.forEach(widgetId => {
+      const el = document.querySelector(`.widget[data-widget="${widgetId}"]`);
+      if(el) col.appendChild(el);
     });
-  });
-
-  // also restore any widgets that were hidden but existed at snapshot time
-  getWidgets().forEach(w => {
-    // if widget was present at snapshot time, it would have been appended above.
-    // if it was removed during customize, we want it back only on cancel:
-    // we handle this by resetting display for all widgets after restore call (cancel path).
   });
 }
 
-/* ---------- Customize Mode Toggle ---------- */
 function setCustomizeMode(on){
-  customizeMode = on;
-
-  if(on){
-    widgetLayoutSnapshot = snapshotLayout();
-    document.body.classList.add("customizeMode");
-    if(customizeActions) customizeActions.style.display = "flex";
-    enableWidgetInteractions();
-  }else{
-    document.body.classList.remove("customizeMode");
-    if(customizeActions) customizeActions.style.display = "none";
-    disableWidgetInteractions();
-  }
+  customizeMode = !!on;
+  document.body.classList.toggle("customizeMode", customizeMode);
+  customizeActions.style.display = customizeMode ? "flex" : "none";
+  btnCustomize.style.display = customizeMode ? "none" : "";
 }
 
-if(btnCustomize){
-  btnCustomize.addEventListener("click", () => {
-    setCustomizeMode(!customizeMode);
-  });
-}
+btnCustomize.addEventListener("click", ()=>{
+  widgetLayoutSnapshot = snapshotLayout();
+  setCustomizeMode(true);
+});
 
-if(btnCancelWidgets){
-  btnCancelWidgets.addEventListener("click", () => {
-    // restore original order + show everything that existed
-    restoreLayout(widgetLayoutSnapshot);
-
-    // ensure any removed widgets come back
-    getWidgets().forEach(w => {
-      w.style.display = "";
-      w.dataset.removed = "0";
-    });
-
-    setCustomizeMode(false);
-  });
-}
-
-if(btnSaveWidgets){
-btnSaveWidgets.addEventListener("click", () => {
-  // ✅ NO confirmation placeholder
-  // ✅ Keep current widget positions as-is
-  // ✅ Exit customize mode immediately
+btnCancelWidgets.addEventListener("click", ()=>{
+  restoreLayout(widgetLayoutSnapshot);
   setCustomizeMode(false);
 });
 
+btnSaveWidgets.addEventListener("click", ()=>{
+  // ✅ no placeholder, no memory persistence — just exit mode and keep current positions
+  setCustomizeMode(false);
+});
+
+/* ---------- Widget Drawer open/close ---------- */
+function openWidgetDrawer(){
+  widgetDrawer.classList.add("drawer--open");
+  widgetDrawer.setAttribute("aria-hidden","false");
 }
-
-/* Load saved layout on page load */
-(function tryLoadSavedLayout(){
-  try{
-    const raw = localStorage.getItem("dashboard_widget_layout_v2");
-    if(!raw) return;
-    const data = JSON.parse(raw);
-    restoreLayout(data);
-  }catch(e){}
-})();
-
-/* ---------- Remove Widget (Customize only) ---------- */
-function onRemoveWidgetClick(e){
-  const btn = e.target.closest(".widgetRemove");
-  if(!btn) return;
-  const w = btn.closest(".widget[data-widget]");
-  if(!w) return;
-
-  // simple remove: hide
-  w.style.display = "none";
-  w.dataset.removed = "1";
+function closeWidgetDrawer(){
+  widgetDrawer.classList.remove("drawer--open");
+  widgetDrawer.setAttribute("aria-hidden","true");
 }
-
-/* =========================
-   TRUE DRAG SYSTEM (pointer-based)
-========================= */
-
-let drag = {
-  active: false,
-  widget: null,
-  placeholder: null,
-  startX: 0,
-  startY: 0,
-  offsetX: 0,
-  offsetY: 0,
-  w: 0,
-  h: 0,
-  lastClientX: 0,
-  lastClientY: 0,
-  autoScrollRAF: null
-};
-
-function makePlaceholder(heightPx){
-  const ph = document.createElement("div");
-  ph.className = "dropPlaceholder";
-  ph.style.height = Math.max(60, heightPx) + "px";
-  return ph;
-}
-
-function setGhostPosition(clientX, clientY){
-  const x = clientX - drag.offsetX;
-  const y = clientY - drag.offsetY;
-
-  drag.widget.style.setProperty("--dragX", x + "px");
-  drag.widget.style.setProperty("--dragY", y + "px");
-}
-
-function nearestDropTarget(clientX, clientY){
-  // find the column under pointer
-  const el = document.elementFromPoint(clientX, clientY);
-  if(!el) return null;
-
-  const col = el.closest(".col");
-  if(!col) return null;
-
-  // find the closest widget inside that col to insert before
-  const widgets = Array.from(col.querySelectorAll(".widget[data-widget]"))
-    .filter(w => w !== drag.widget && w.style.display !== "none" && !w.classList.contains("is-drag-ghost"));
-
-  if(widgets.length === 0){
-    return { col, before: null };
-  }
-
-  // find insertion point by vertical midpoint
-  for(const w of widgets){
-    const r = w.getBoundingClientRect();
-    const mid = r.top + r.height/2;
-    if(clientY < mid){
-      return { col, before: w };
-    }
-  }
-
-  return { col, before: null }; // append at end
-}
-
-function placePlaceholder(clientX, clientY){
-  const target = nearestDropTarget(clientX, clientY);
-  if(!target) return;
-
-  const { col, before } = target;
-
-  // if placeholder not in DOM yet, add it
-  if(!drag.placeholder.parentNode){
-    col.appendChild(drag.placeholder);
-  }
-
-  // move placeholder to correct position
-  if(before){
-    if(drag.placeholder.nextSibling !== before){
-      col.insertBefore(drag.placeholder, before);
-    }
-  }else{
-    col.appendChild(drag.placeholder);
-  }
-}
-
-/* Auto-scroll near top/bottom while dragging */
-function startAutoScroll(){
-  if(drag.autoScrollRAF) cancelAnimationFrame(drag.autoScrollRAF);
-
-  const tick = ()=>{
-    if(!drag.active) return;
-
-    const y = drag.lastClientY;
-    const edge = 90; // px
-    const speed = 18; // px per frame-ish
-
-    const topEdge = edge;
-    const bottomEdge = window.innerHeight - edge;
-
-    if(y < topEdge){
-      window.scrollBy(0, -speed);
-      // after scroll, update placeholder based on last known pointer
-      placePlaceholder(drag.lastClientX, drag.lastClientY);
-    }else if(y > bottomEdge){
-      window.scrollBy(0, speed);
-      placePlaceholder(drag.lastClientX, drag.lastClientY);
-    }
-
-    drag.autoScrollRAF = requestAnimationFrame(tick);
-  };
-
-  drag.autoScrollRAF = requestAnimationFrame(tick);
-}
-
-function stopAutoScroll(){
-  if(drag.autoScrollRAF){
-    cancelAnimationFrame(drag.autoScrollRAF);
-    drag.autoScrollRAF = null;
-  }
-}
-
-function onPointerMove(e){
-  if(!drag.active) return;
-
-  drag.lastClientX = e.clientX;
-  drag.lastClientY = e.clientY;
-
-  setGhostPosition(e.clientX, e.clientY);
-  placePlaceholder(e.clientX, e.clientY);
-}
-
-function endDrag(commit){
-  if(!drag.active) return;
-
-  stopAutoScroll();
-
-  drag.active = false;
-
-  // remove ghost styling
-  drag.widget.classList.remove("is-drag-ghost");
-  drag.widget.classList.remove("dragging");
-  drag.widget.style.removeProperty("--dragW");
-  drag.widget.style.removeProperty("--dragX");
-  drag.widget.style.removeProperty("--dragY");
-  drag.widget.style.width = "";
-  drag.widget.style.height = "";
-
-  // commit = insert into placeholder position
-  if(commit && drag.placeholder && drag.placeholder.parentNode){
-    drag.placeholder.parentNode.insertBefore(drag.widget, drag.placeholder);
-  }
-
-  // cleanup placeholder
-  if(drag.placeholder && drag.placeholder.parentNode){
-    drag.placeholder.parentNode.removeChild(drag.placeholder);
-  }
-
-  drag.widget = null;
-  drag.placeholder = null;
-
-  document.removeEventListener("pointermove", onPointerMove, { passive: true });
-  document.removeEventListener("pointerup", onPointerUp, { passive: true });
-  document.removeEventListener("pointercancel", onPointerCancel, { passive: true });
-}
-
-function onPointerUp(){
-  endDrag(true);
-}
-function onPointerCancel(){
-  endDrag(false);
-}
-
-function beginDragFromHandle(handleEl, e){
-  const w = handleEl.closest(".widget[data-widget]");
-  if(!w) return;
-
-  // ignore if hidden
-  if(w.style.display === "none") return;
-
-  drag.active = true;
-  drag.widget = w;
-
-  const rect = w.getBoundingClientRect();
-  drag.w = rect.width;
-  drag.h = rect.height;
-
-  // pointer offset within widget
-  drag.offsetX = e.clientX - rect.left;
-  drag.offsetY = e.clientY - rect.top;
-
-  drag.lastClientX = e.clientX;
-  drag.lastClientY = e.clientY;
-
-  // placeholder stays in layout
-  drag.placeholder = makePlaceholder(drag.h);
-
-  // insert placeholder where widget used to be
-  w.parentNode.insertBefore(drag.placeholder, w);
-
-  // turn widget into fixed-position ghost
-  w.classList.add("dragging");
-  w.classList.add("is-drag-ghost");
-  w.style.setProperty("--dragW", drag.w + "px");
-  w.style.width = drag.w + "px";
-  w.style.height = drag.h + "px";
-
-  setGhostPosition(e.clientX, e.clientY);
-
-  // bind moves
-  document.addEventListener("pointermove", onPointerMove, { passive: true });
-  document.addEventListener("pointerup", onPointerUp, { passive: true });
-  document.addEventListener("pointercancel", onPointerCancel, { passive: true });
-
-  // start auto scroll loop
-  startAutoScroll();
-}
-
-function onHandlePointerDown(e){
-  if(!customizeMode) return;
-
-  const handle = e.target.closest(".widgetMove");
-  if(!handle) return;
-
-  // IMPORTANT: don’t drag if clicking remove button
-  if(e.target.closest(".widgetRemove")) return;
-
-  // capture pointer so ghost tracks well
-  try{ handle.setPointerCapture(e.pointerId); }catch(err){}
-
-  beginDragFromHandle(handle, e);
-}
-
-/* ---------- Enable / Disable interactions ---------- */
-function enableWidgetInteractions(){
-  // Remove button
-  document.addEventListener("click", onRemoveWidgetClick);
-
-  // Drag handle pointer down
-  document.addEventListener("pointerdown", onHandlePointerDown);
-
-  // Make sure widget handles feel draggable
-  getWidgets().forEach(w => {
-    const move = w.querySelector(".widgetMove");
-    if(move) move.style.cursor = "grab";
-  });
-}
-
-function disableWidgetInteractions(){
-  document.removeEventListener("click", onRemoveWidgetClick);
-  document.removeEventListener("pointerdown", onHandlePointerDown);
-
-  // if somehow still dragging
-  endDrag(false);
-}
-
-/* ---------- Add Widget Drawer hooks (unchanged demo) ---------- */
-if(btnAddWidget && widgetDrawer){
-  btnAddWidget.addEventListener("click", ()=>{
-    widgetDrawer.classList.add("drawer--open");
-    widgetDrawer.setAttribute("aria-hidden","false");
-  });
-}
-if(btnWidgetDrawerDone && widgetDrawer){
-  btnWidgetDrawerDone.addEventListener("click", ()=>{
-    widgetDrawer.classList.remove("drawer--open");
-    widgetDrawer.setAttribute("aria-hidden","true");
-  });
-}
+btnAddWidget.addEventListener("click", openWidgetDrawer);
 document.querySelectorAll("[data-widget-drawer-close='1']").forEach(el=>{
-  el.addEventListener("click", ()=>{
-    if(!widgetDrawer) return;
-    widgetDrawer.classList.remove("drawer--open");
-    widgetDrawer.setAttribute("aria-hidden","true");
+  el.addEventListener("click", closeWidgetDrawer);
+});
+
+/* ---------- Cancel placement overlay ---------- */
+const placeWidgetCancel = document.getElementById("placeWidgetCancel");
+const btnCancelPlaceWidget = document.getElementById("btnCancelPlaceWidget");
+
+function openPlaceWidgetCancel(){
+  placeWidgetCancel.style.display = "";
+}
+function closePlaceWidgetCancel(){
+  placeWidgetCancel.style.display = "none";
+}
+btnCancelPlaceWidget.addEventListener("click", ()=>{
+  // cancel pending drawer drag
+  pendingDrawerWidgetKey = null;
+  endDrag(true);
+});
+
+/* ---------- Remove widgets (customize mode only) ---------- */
+document.querySelectorAll(".widgetRemove").forEach(btn=>{
+  btn.addEventListener("click",(e)=>{
+    e.preventDefault();
+    e.stopPropagation();
+    if(!customizeMode) return;
+    const w = closestWidget(btn);
+    if(w) w.style.display = "none";
   });
 });
 
+/* ---------- Drag state ---------- */
+let pendingDrawerWidgetKey = null;
+
+const drag = {
+  active: false,
+  fromDrawer: false,
+  pointerId: null,
+  originWidgetEl: null,
+  ghostEl: null,
+  placeholderEl: null,
+  lastClientX: 0,
+  lastClientY: 0,
+  raf: 0,
+  dropTargetCol: null,
+  dropBeforeEl: null
+};
+
+function createPlaceholderLike(el){
+  const ph = document.createElement("div");
+  ph.className = "dropPlaceholder";
+  ph.style.height = `${Math.max(120, el.getBoundingClientRect().height)}px`;
+  return ph;
+}
+
+function setGhostFromEl(el){
+  const rect = el.getBoundingClientRect();
+  const clone = el.cloneNode(true);
+
+  clone.classList.add("is-drag-ghost");
+  clone.classList.remove("dragging");
+
+  clone.style.setProperty("--dragW", rect.width + "px");
+  clone.style.width = rect.width + "px";
+
+  document.body.appendChild(clone);
+
+  return { clone, rect };
+}
+
+function moveGhost(x, y){
+  drag.ghostEl.style.setProperty("--dragX", (x - drag.ghostOffsetX) + "px");
+  drag.ghostEl.style.setProperty("--dragY", (y - drag.ghostOffsetY) + "px");
+}
+
+function findDropSpot(clientX, clientY){
+  // ✅ identify closest column first
+  const cols = getCols();
+  let bestCol = null;
+  let bestDist = Infinity;
+
+  cols.forEach(col=>{
+    const r = col.getBoundingClientRect();
+    const cx = Math.max(r.left, Math.min(clientX, r.right));
+    const cy = Math.max(r.top, Math.min(clientY, r.bottom));
+    const dx = cx - clientX;
+    const dy = cy - clientY;
+    const d2 = dx*dx + dy*dy;
+    if(d2 < bestDist){
+      bestDist = d2;
+      bestCol = col;
+    }
+  });
+
+  if(!bestCol) return { col:null, before:null, isValid:false };
+
+  // ✅ determine "before" element inside that column by Y position
+  const widgets = Array.from(bestCol.querySelectorAll(".widget[data-widget]"))
+    .filter(w => w.style.display !== "none" && w !== drag.originWidgetEl);
+
+  let before = null;
+  for(const w of widgets){
+    const wr = w.getBoundingClientRect();
+    if(clientY < wr.top + wr.height/2){
+      before = w;
+      break;
+    }
+  }
+
+  // ✅ validity heuristic: near the chosen column area
+  const colRect = bestCol.getBoundingClientRect();
+  const withinX = clientX >= colRect.left - 30 && clientX <= colRect.right + 30;
+  const withinY = clientY >= colRect.top - 40 && clientY <= colRect.bottom + 40;
+  const isValid = withinX && withinY;
+
+  return { col: bestCol, before, isValid };
+}
+
+function applyPlaceholderSpot(col, before){
+  if(!drag.placeholderEl) return;
+  if(!col) return;
+
+  // only update DOM if changed
+  if(drag.dropTargetCol === col && drag.dropBeforeEl === before) return;
+
+  drag.dropTargetCol = col;
+  drag.dropBeforeEl = before;
+
+  if(before){
+    col.insertBefore(drag.placeholderEl, before);
+  } else {
+    col.appendChild(drag.placeholderEl);
+  }
+}
+
+function startDragFromExisting(widgetEl, ev){
+  if(!customizeMode) return;
+
+  drag.active = true;
+  drag.fromDrawer = false;
+  drag.pointerId = ev.pointerId;
+  drag.originWidgetEl = widgetEl;
+
+  document.body.classList.add("draggingWidgets");
+
+  const { clone, rect } = setGhostFromEl(widgetEl);
+  drag.ghostEl = clone;
+
+  // offset so cursor stays where grabbed
+  drag.ghostOffsetX = ev.clientX - rect.left;
+  drag.ghostOffsetY = ev.clientY - rect.top;
+
+  // placeholder sits where the widget was
+  drag.placeholderEl = createPlaceholderLike(widgetEl);
+  widgetEl.parentElement.insertBefore(drag.placeholderEl, widgetEl);
+  widgetEl.classList.add("dragging");
+  widgetEl.style.display = "none";
+
+  drag.lastClientX = ev.clientX;
+  drag.lastClientY = ev.clientY;
+
+  scheduleDragFrame();
+}
+
+function startDragFromDrawer(fakeWidgetEl, ev){
+  drag.active = true;
+  drag.fromDrawer = true;
+  drag.pointerId = ev.pointerId;
+  drag.originWidgetEl = null;
+
+  document.body.classList.add("draggingWidgets");
+
+  // create ghost using fake widget
+  const { clone, rect } = setGhostFromEl(fakeWidgetEl);
+  drag.ghostEl = clone;
+
+  drag.ghostOffsetX = Math.min(40, rect.width/2);
+  drag.ghostOffsetY = 24;
+
+  // placeholder created now (it will push widgets when inserted)
+  drag.placeholderEl = createPlaceholderLike(fakeWidgetEl);
+
+  drag.lastClientX = ev.clientX;
+  drag.lastClientY = ev.clientY;
+
+  scheduleDragFrame();
+}
+
+function scheduleDragFrame(){
+  if(drag.raf) return;
+  drag.raf = requestAnimationFrame(()=>{
+    drag.raf = 0;
+    if(!drag.active) return;
+
+    // move ghost
+    moveGhost(drag.lastClientX, drag.lastClientY);
+
+    // compute best placeholder spot
+    const spot = findDropSpot(drag.lastClientX, drag.lastClientY);
+    applyPlaceholderSpot(spot.col, spot.before);
+
+    // ✅ GREEN confirmation logic
+    drag.placeholderEl.classList.toggle("is-valid-drop", !!spot.isValid);
+
+    // keep looping while active
+    scheduleDragFrame();
+  });
+}
+
+function endDrag(cancelled){
+  if(!drag.active) return;
+
+  // stop raf
+  if(drag.raf){
+    cancelAnimationFrame(drag.raf);
+    drag.raf = 0;
+  }
+
+  const ph = drag.placeholderEl;
+  const ghost = drag.ghostEl;
+
+  // remove ghost
+  if(ghost && ghost.parentNode) ghost.parentNode.removeChild(ghost);
+
+  if(cancelled){
+    // restore original widget if needed
+    if(drag.originWidgetEl){
+      drag.originWidgetEl.style.display = "";
+      drag.originWidgetEl.classList.remove("dragging");
+    }
+    if(ph && ph.parentNode) ph.parentNode.removeChild(ph);
+
+    pendingDrawerWidgetKey = null;
+    closePlaceWidgetCancel();
+    document.body.classList.remove("draggingWidgets");
+
+    drag.active = false;
+    return;
+  }
+
+  // must have placeholder placed validly
+  const didHaveSpot = !!(ph && ph.parentNode);
+  const isValid = ph && ph.classList.contains("is-valid-drop");
+
+  if(!didHaveSpot || !isValid){
+    // invalid drop = cancel
+    if(drag.originWidgetEl){
+      drag.originWidgetEl.style.display = "";
+      drag.originWidgetEl.classList.remove("dragging");
+    }
+    if(ph && ph.parentNode) ph.parentNode.removeChild(ph);
+
+    pendingDrawerWidgetKey = null;
+    closePlaceWidgetCancel();
+    document.body.classList.remove("draggingWidgets");
+
+    drag.active = false;
+    return;
+  }
+
+  // place existing widget
+  if(!drag.fromDrawer && drag.originWidgetEl){
+    ph.parentNode.insertBefore(drag.originWidgetEl, ph);
+    drag.originWidgetEl.style.display = "";
+    drag.originWidgetEl.classList.remove("dragging");
+    ph.parentNode.removeChild(ph);
+  }
+
+  // place new widget from drawer
+  if(drag.fromDrawer){
+    const key = pendingDrawerWidgetKey;
+    pendingDrawerWidgetKey = null;
+
+    const newWidget = buildRealWidgetFromKey(key);
+    ph.parentNode.insertBefore(newWidget, ph);
+    ph.parentNode.removeChild(ph);
+
+    closePlaceWidgetCancel();
+  }
+
+  document.body.classList.remove("draggingWidgets");
+
+  drag.active = false;
+  drag.fromDrawer = false;
+  drag.pointerId = null;
+  drag.originWidgetEl = null;
+  drag.ghostEl = null;
+  drag.placeholderEl = null;
+  drag.dropTargetCol = null;
+  drag.dropBeforeEl = null;
+}
+
+function buildRealWidgetFromKey(key){
+  // ✅ realistic placeholder widgets (draggable, removable)
+  const section = document.createElement("section");
+  section.className = "card widget";
+  section.setAttribute("data-widget", key);
+
+  section.innerHTML = `
+    <div class="widgetTools" aria-hidden="true">
+      <button class="widgetToolBtn widgetMove" title="Drag widget" aria-label="Drag widget">
+        <i class="fa-solid fa-grip-vertical"></i>
+      </button>
+      <button class="widgetToolBtn widgetRemove" title="Remove widget" aria-label="Remove widget">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div class="widgetDropHint" aria-hidden="true"></div>
+
+    <div class="card__subtitle">
+      <h2 class="card__title">${humanizeWidgetTitle(key)}</h2>
+      <p>Widget placeholder content</p>
+    </div>
+
+    <div style="border:1px solid var(--border); border-radius:12px; padding:12px;">
+      <div style="height:10px; border-radius:999px; background:rgba(148,163,184,.22); width:82%;"></div>
+      <div style="margin-top:10px; height:10px; border-radius:999px; background:rgba(148,163,184,.18); width:63%;"></div>
+      <div style="margin-top:14px; height:34px; border-radius:12px; background:rgba(59,130,246,.10); border:1px solid rgba(59,130,246,.18);"></div>
+    </div>
+  `;
+
+  // hook remove button
+  section.querySelector(".widgetRemove").addEventListener("click",(e)=>{
+    e.preventDefault();
+    e.stopPropagation();
+    if(!customizeMode) return;
+    section.style.display = "none";
+  });
+
+  return section;
+}
+
+/* ---------- Pointer events wiring ---------- */
+document.addEventListener("pointerdown",(ev)=>{
+  if(!customizeMode) return;
+
+  const handle = closestWidgetHandle(ev.target);
+  if(!handle) return;
+
+  const widget = closestWidget(handle);
+  if(!widget) return;
+
+  ev.preventDefault();
+  widget.setPointerCapture(ev.pointerId);
+  startDragFromExisting(widget, ev);
+});
+
+document.addEventListener("pointermove",(ev)=>{
+  if(!drag.active) return;
+  if(drag.pointerId !== ev.pointerId) return;
+  drag.lastClientX = ev.clientX;
+  drag.lastClientY = ev.clientY;
+});
+
+document.addEventListener("pointerup",(ev)=>{
+  if(!drag.active) return;
+  if(drag.pointerId !== ev.pointerId) return;
+  endDrag(false);
+});
+
+document.addEventListener("pointercancel",(ev)=>{
+  if(!drag.active) return;
+  if(drag.pointerId !== ev.pointerId) return;
+  endDrag(true);
+});
+
+/* ---------- Drawer tiles -> pointer drag ---------- */
+document.querySelectorAll(".widgetTile[draggable='true']").forEach(tile=>{
+  tile.addEventListener("pointerdown",(ev)=>{
+    const key = tile.getAttribute("data-add-widget");
+    if(!key) return;
+
+    pendingDrawerWidgetKey = key;
+
+    // close drawer so the dashboard is visible (NO blur changes)
+    closeWidgetDrawer();
+
+    // show cancel placing X
+    openPlaceWidgetCancel();
+
+    // create a temp element for realistic sizing
+    const fake = document.createElement("section");
+    fake.className = "card widget";
+    fake.style.width = "420px";
+    fake.innerHTML = `
+      <div class="card__subtitle">
+        <h2 class="card__title">${humanizeWidgetTitle(key)}</h2>
+        <p>Widget preview</p>
+      </div>
+      <div style="border:1px solid var(--border); border-radius:12px; padding:12px;">
+        <div style="height:10px; border-radius:999px; background:rgba(148,163,184,.22); width:78%;"></div>
+        <div style="margin-top:10px; height:10px; border-radius:999px; background:rgba(148,163,184,.18); width:60%;"></div>
+      </div>
+    `;
+
+    ev.preventDefault();
+    tile.setPointerCapture(ev.pointerId);
+    startDragFromDrawer(fake, ev);
+  });
+});
+
+/* ESC cancels active drag */
+document.addEventListener("keydown",(e)=>{
+  if(e.key === "Escape" && drag.active){
+    endDrag(true);
+  }
+});
 
 </script>
