@@ -182,13 +182,207 @@ p{ margin:0; color:var(--muted); }
 }
 @media (min-width: 1024px){
   .grid{
-    grid-template-columns: 3fr 5fr 4fr;
+    grid-template-columns: 1fr 1fr 1fr; /* ✅ equal width columns */
     gap: 22px;
     align-items:start;
   }
 }
 
+
 .col{ display:flex; flex-direction:column; gap: 18px; }
+
+/* =========================
+   DASHBOARD WIDGET CUSTOMIZE MODE
+   (No UI change unless .customizeMode is active)
+========================= */
+
+/* wrapper around each card section */
+.widget{
+  position: relative;
+  transition: transform .18s ease, box-shadow .18s ease, outline-color .18s ease;
+}
+
+/* only visible in customize mode */
+.widgetTools{
+  position:absolute;
+  top: 10px;
+  right: 10px;
+  display:none;
+  gap: 8px;
+  z-index: 5;
+}
+.widgetToolBtn{
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid rgba(226,232,240,.9);
+  background: rgba(255,255,255,.96);
+  box-shadow: 0 6px 14px rgba(16,24,40,.10);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  color:#475569;
+  transition: transform .12s ease, background .12s ease, box-shadow .12s ease;
+}
+.widgetToolBtn:hover{
+  transform: translateY(-1px);
+  background:#fff;
+  box-shadow: 0 10px 18px rgba(16,24,40,.14);
+}
+.widgetToolBtn i{ font-size: 14px; }
+
+/* pop + highlight in customize mode */
+body.customizeMode .widget{
+  outline: 2px dashed rgba(59,130,246,.25);
+  outline-offset: 6px;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* show tools ONLY in customize mode */
+body.customizeMode .widgetTools{
+  display:flex;
+}
+
+/* subtle "wiggle" */
+@keyframes widgetWiggle{
+  0%{ transform: translateY(-2px) rotate(0deg); }
+  25%{ transform: translateY(-2px) rotate(.25deg); }
+  50%{ transform: translateY(-2px) rotate(0deg); }
+  75%{ transform: translateY(-2px) rotate(-.25deg); }
+  100%{ transform: translateY(-2px) rotate(0deg); }
+}
+body.customizeMode .widget{
+  animation: widgetWiggle 1.6s ease-in-out infinite;
+}
+body.customizeMode .widget:active{
+  animation:none;
+}
+
+/* dragging feedback */
+.widget.dragging{
+  opacity:.85;
+  transform: scale(.99);
+}
+/* ===== Better drag realism (ghost + placeholder) ===== */
+.widget.is-drag-ghost{
+  position: fixed !important;
+  z-index: 999999 !important;
+  pointer-events: none !important;
+  width: var(--dragW, auto);
+  left: 0; top: 0;
+  transform: translate3d(var(--dragX, 0px), var(--dragY, 0px), 0) rotate(.25deg) !important;
+  opacity: .95;
+}
+
+.dropPlaceholder{
+  border: 2px dashed rgba(59,130,246,.45);
+  border-radius: 16px;
+  background: rgba(59,130,246,.08);
+  box-shadow: inset 0 0 0 2px rgba(59,130,246,.10);
+  margin: 0;
+}
+
+body.customizeMode .col{
+  min-height: 40px;
+}
+
+.widgetDropHint{
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(59,130,246,.18);
+  border: 1px dashed rgba(59,130,246,.35);
+  margin: -6px 0 6px;
+  display:none;
+}
+body.customizeMode .widgetDropHint{ display:block; }
+
+/* placeholder when widget removed */
+.widgetRemoved{
+  display:none;
+}
+
+/* =========================
+   Add Widget Drawer (same styling as .drawer)
+   (Hidden unless open)
+========================= */
+.drawer.drawer--widgets .drawer__panel{
+  width: min(520px, calc(100% - 40px));
+}
+.widgetPicker{
+  display:flex;
+  flex-direction:column;
+  gap: 14px;
+}
+.widgetModule{
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  background:#fff;
+  box-shadow: var(--shadow-sm);
+}
+.widgetModule__head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.widgetModule__title{
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+.widgetGrid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.widgetTile{
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px;
+  cursor:grab;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  transition: transform .14s ease, box-shadow .14s ease;
+  min-height: 74px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+}
+.widgetTile:hover{
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+.widgetTile__top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 10px;
+}
+.widgetTile__name{
+  font-weight: 800;
+  font-size: 13px;
+}
+.widgetTile__meta{
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+.widgetTile__pill{
+  height: 22px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--primary-subtle);
+  color: var(--primary);
+  font-weight: 800;
+  font-size: 11px;
+  display:inline-flex;
+  align-items:center;
+}
 
 /* =========================
    Cards
@@ -1277,15 +1471,36 @@ textarea.formTextarea:focus{
           </div>
         </div>
 
-        <button class="btn btn--primary">
-          <svg class="btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M8 2v4"></path>
-            <path d="M16 2v4"></path>
-            <rect width="18" height="18" x="3" y="4" rx="2"></rect>
-            <path d="M3 10h18"></path>
-          </svg>
-          Schedule Success Session
-        </button>
+<!-- NEW: Customize + actions (only shows in customize mode) -->
+<button id="btnCustomize" class="btn btn--primary" type="button" title="Customize dashboard">
+  <i class="fa-solid fa-gear"></i>
+  Customize
+</button>
+
+<!-- Existing button stays exactly the same -->
+<button class="btn btn--primary">
+  <svg class="btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M8 2v4"></path>
+    <path d="M16 2v4"></path>
+    <rect width="18" height="18" x="3" y="4" rx="2"></rect>
+    <path d="M3 10h18"></path>
+  </svg>
+  Schedule Success Session
+</button>
+
+<!-- Customize action row (hidden unless customize mode) -->
+<div id="customizeActions" style="display:none; gap:10px; align-items:center; margin-left: 6px;">
+  <button id="btnAddWidget" class="btn btn--outline btn--sm" type="button">
+    <i class="fa-solid fa-plus"></i> Add Widget
+  </button>
+  <button id="btnSaveWidgets" class="btn btn--primary btn--sm" type="button">
+    <i class="fa-solid fa-floppy-disk"></i> Save Changes
+  </button>
+  <button id="btnCancelWidgets" class="btn btn--outline btn--sm" type="button">
+    Cancel
+  </button>
+</div>
+
       </div>
     </div>
   </header>
@@ -1297,8 +1512,15 @@ textarea.formTextarea:focus{
       <aside class="col col--left">
 
         <!-- MOVED: Success Guide (top left) -->
-        <section class="card">
-          <h2 class="card__title">Your Success Guide</h2>
+<section class="card widget" data-widget="successGuide">
+  <div class="widgetTools" aria-hidden="true">
+    <button class="widgetToolBtn widgetMove" title="Drag widget" aria-label="Drag widget"><i class="fa-solid fa-grip-vertical"></i></button>
+    <button class="widgetToolBtn widgetRemove" title="Remove widget" aria-label="Remove widget"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div class="widgetDropHint" aria-hidden="true"></div>
+
+  <h2 class="card__title">Your Success Guide</h2>
+
 
           <div class="guide">
             <img class="guide__avatar"
@@ -1320,7 +1542,12 @@ textarea.formTextarea:focus{
         </section>
 
         <!-- UPDATED: Projects + phases -->
-        <section class="card">
+       <section class="card widget" data-widget="successGuide">
+  <div class="widgetTools" aria-hidden="true">
+    <button class="widgetToolBtn widgetMove" title="Drag widget" aria-label="Drag widget"><i class="fa-solid fa-grip-vertical"></i></button>
+    <button class="widgetToolBtn widgetRemove" title="Remove widget" aria-label="Remove widget"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div class="widgetDropHint" aria-hidden="true"></div>
           <div class="projects__label">PROJECTS</div>
 
           <!-- MOVED DOTS: directly under label -->
@@ -1338,7 +1565,12 @@ textarea.formTextarea:focus{
         </section>
 
         <!-- UPDATED: Upcoming Meetings empty state -->
-        <section class="card">
+       <section class="card widget" data-widget="upcomingMeetings">
+  <div class="widgetTools" aria-hidden="true">
+    <button class="widgetToolBtn widgetMove" title="Drag widget" aria-label="Drag widget"><i class="fa-solid fa-grip-vertical"></i></button>
+    <button class="widgetToolBtn widgetRemove" title="Remove widget" aria-label="Remove widget"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div class="widgetDropHint" aria-hidden="true"></div>
           <div class="card__header-row">
             <h2 class="card__title">Upcoming Meetings</h2>
             <svg class="muted-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1362,7 +1594,12 @@ textarea.formTextarea:focus{
         </section>
 
         <!-- UPDATED: Assigned Tasks -->
-        <section class="card">
+      <section class="card widget" data-widget="assignedTasks">
+  <div class="widgetTools" aria-hidden="true">
+    <button class="widgetToolBtn widgetMove" title="Drag widget" aria-label="Drag widget"><i class="fa-solid fa-grip-vertical"></i></button>
+    <button class="widgetToolBtn widgetRemove" title="Remove widget" aria-label="Remove widget"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div class="widgetDropHint" aria-hidden="true"></div>
           <h2 class="card__title">Assigned Tasks</h2>
 
           <div class="tasks">
@@ -1511,7 +1748,12 @@ textarea.formTextarea:focus{
 
       <!-- CENTER COLUMN -->
       <section class="col col--center">
-        <section class="card">
+       <section class="card widget" data-widget="smartFeedWidget">
+  <div class="widgetTools" aria-hidden="true">
+    <button class="widgetToolBtn widgetMove" title="Drag widget" aria-label="Drag widget"><i class="fa-solid fa-grip-vertical"></i></button>
+    <button class="widgetToolBtn widgetRemove" title="Remove widget" aria-label="Remove widget"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div class="widgetDropHint" aria-hidden="true"></div>
           <div class="card__subtitle">
             <h2 class="card__title">Smart Feed</h2>
             <p>Personalized recommendations and reminders</p>
@@ -1609,7 +1851,12 @@ textarea.formTextarea:focus{
           </div>
         </section>
 
-        <section class="card">
+        <section class="card widget" data-widget="successGuide">
+  <div class="widgetTools" aria-hidden="true">
+    <button class="widgetToolBtn widgetMove" title="Drag widget" aria-label="Drag widget"><i class="fa-solid fa-grip-vertical"></i></button>
+    <button class="widgetToolBtn widgetRemove" title="Remove widget" aria-label="Remove widget"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div class="widgetDropHint" aria-hidden="true"></div>
           <div class="card__subtitle">
             <h2 class="card__title">Recent Activity</h2>
             <p>Track your onboarding progress</p>
@@ -1669,7 +1916,12 @@ textarea.formTextarea:focus{
 
       <!-- RIGHT COLUMN -->
       <aside class="col col--right">
-        <section class="card card--gradient">
+        <section class="card card--gradient widget" data-widget="successCall">
+  <div class="widgetTools" aria-hidden="true">
+    <button class="widgetToolBtn widgetMove" title="Drag widget" aria-label="Drag widget"><i class="fa-solid fa-grip-vertical"></i></button>
+    <button class="widgetToolBtn widgetRemove" title="Remove widget" aria-label="Remove widget"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div class="widgetDropHint" aria-hidden="true"></div>
           <div class="callout">
             <div class="callout__head">
               <div class="callout__badge"><i class="fa-solid fa-calendar-check"></i></div>
@@ -1694,7 +1946,13 @@ textarea.formTextarea:focus{
           </div>
         </section>
 
-        <section class="card">
+       <section class="card widget" data-widget="learningCenter">
+  <div class="widgetTools" aria-hidden="true">
+    <button class="widgetToolBtn widgetMove" title="Drag widget" aria-label="Drag widget"><i class="fa-solid fa-grip-vertical"></i></button>
+    <button class="widgetToolBtn widgetRemove" title="Remove widget" aria-label="Remove widget"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div class="widgetDropHint" aria-hidden="true"></div>
+
           <div class="card__subtitle">
             <h2 class="card__title">Learning Center</h2>
             <p>Articles and resources to help you succeed</p>
@@ -2130,6 +2388,142 @@ textarea.formTextarea:focus{
 
     </div>
   </div>
+
+<!-- ADD WIDGET DRAWER -->
+<div id="widgetDrawer" class="drawer drawer--widgets" aria-hidden="true">
+  <div class="drawer__backdrop" data-widget-drawer-close="1"></div>
+
+  <div class="drawer__panel" role="dialog" aria-modal="true" aria-label="Add Widget Drawer">
+    <div class="drawer__head">
+      <div>
+        <div class="drawer__title">Add Widget</div>
+        <div class="drawer__sub">Drag a widget into your dashboard layout.</div>
+      </div>
+      <button class="drawer__close" aria-label="Close" data-widget-drawer-close="1">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="drawer__body drawer__body--scroll">
+      <div class="widgetPicker">
+
+        <div class="widgetModule">
+          <div class="widgetModule__head">
+            <div class="widgetModule__title">relationship (contacts)</div>
+            <span class="pill pill--blue">3 widgets</span>
+          </div>
+          <div class="widgetGrid">
+            <div class="widgetTile" draggable="true" data-add-widget="contacts">
+              <div class="widgetTile__top">
+                <div class="widgetTile__name">Contacts</div>
+                <span class="widgetTile__pill">Widget</span>
+              </div>
+              <div class="widgetTile__meta">Quick access to recent & pinned contacts.</div>
+            </div>
+            <div class="widgetTile" draggable="true" data-add-widget="importantContacts">
+              <div class="widgetTile__top">
+                <div class="widgetTile__name">Important Contacts</div>
+                <span class="widgetTile__pill">Widget</span>
+              </div>
+              <div class="widgetTile__meta">Shortlist key people you follow up with most.</div>
+            </div>
+            <div class="widgetTile" draggable="true" data-add-widget="vcards">
+              <div class="widgetTile__top">
+                <div class="widgetTile__name">vCards</div>
+                <span class="widgetTile__pill">Widget</span>
+              </div>
+              <div class="widgetTile__meta">Recent scans, imports, and card actions.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="widgetModule">
+          <div class="widgetModule__head">
+            <div class="widgetModule__title">communications</div>
+            <span class="pill">2 widgets</span>
+          </div>
+          <div class="widgetGrid">
+            <div class="widgetTile" draggable="true" data-add-widget="messages">
+              <div class="widgetTile__top">
+                <div class="widgetTile__name">Messages</div>
+                <span class="widgetTile__pill">Widget</span>
+              </div>
+              <div class="widgetTile__meta">Inbox view for email/SMS activity.</div>
+            </div>
+            <div class="widgetTile" draggable="true" data-add-widget="followups">
+              <div class="widgetTile__top">
+                <div class="widgetTile__name">Follow-ups</div>
+                <span class="widgetTile__pill">Widget</span>
+              </div>
+              <div class="widgetTile__meta">A queue of pending follow-ups & reminders.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="widgetModule">
+          <div class="widgetModule__head">
+            <div class="widgetModule__title">networks & groups</div>
+            <span class="pill">2 widgets</span>
+          </div>
+          <div class="widgetGrid">
+            <div class="widgetTile" draggable="true" data-add-widget="networks">
+              <div class="widgetTile__top">
+                <div class="widgetTile__name">Networks</div>
+                <span class="widgetTile__pill">Widget</span>
+              </div>
+              <div class="widgetTile__meta">Your chapters, orgs, chambers, memberships.</div>
+            </div>
+            <div class="widgetTile" draggable="true" data-add-widget="groups">
+              <div class="widgetTile__top">
+                <div class="widgetTile__name">Groups</div>
+                <span class="widgetTile__pill">Widget</span>
+              </div>
+              <div class="widgetTile__meta">Grouped contact lists with quick actions.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="widgetModule">
+          <div class="widgetModule__head">
+            <div class="widgetModule__title">important dates</div>
+            <span class="pill pill--blue">1 widget</span>
+          </div>
+          <div class="widgetGrid">
+            <div class="widgetTile" draggable="true" data-add-widget="importantDates">
+              <div class="widgetTile__top">
+                <div class="widgetTile__name">Important Dates</div>
+                <span class="widgetTile__pill">Widget</span>
+              </div>
+              <div class="widgetTile__meta">Birthdays, anniversaries, milestones, renewals.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="widgetModule">
+          <div class="widgetModule__head">
+            <div class="widgetModule__title">referrals</div>
+            <span class="pill">1 widget</span>
+          </div>
+          <div class="widgetGrid">
+            <div class="widgetTile" draggable="true" data-add-widget="referrals">
+              <div class="widgetTile__top">
+                <div class="widgetTile__name">Referrals</div>
+                <span class="widgetTile__pill">Widget</span>
+              </div>
+              <div class="widgetTile__meta">Track who you referred + who referred you.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="drawer__foot">
+      <button class="btn btn--outline" type="button" data-widget-drawer-close="1">Close</button>
+      <button class="btn btn--primary" type="button" id="btnWidgetDrawerDone">Done</button>
+    </div>
+  </div>
+</div>
 
   <!-- SMART TASK DRAWER -->
   <div id="smartDrawer" class="drawer" aria-hidden="true">
@@ -3151,5 +3545,425 @@ setTimeout(() => {
 
 // initial render
 renderSmartFeed();
+/* =========================
+   DASHBOARD WIDGET CUSTOMIZE MODE (FIXED)
+   - True cursor-follow drag (no HTML5 drag)
+   - Placeholder shifts widgets so placement is obvious
+   - Works across ALL columns including right column
+   - Cancel restores original layout (including removed)
+   - Save keeps new layout and exits customize mode
+   - Auto-scroll near viewport edges while dragging
+   - Mouse wheel still scrolls while dragging
+========================= */
+
+const btnCustomize = document.getElementById("btnCustomize");
+const customizeActions = document.getElementById("customizeActions");
+const btnAddWidget = document.getElementById("btnAddWidget");
+const btnSaveWidgets = document.getElementById("btnSaveWidgets");
+const btnCancelWidgets = document.getElementById("btnCancelWidgets");
+
+const widgetDrawer = document.getElementById("widgetDrawer");
+const btnWidgetDrawerDone = document.getElementById("btnWidgetDrawerDone");
+
+let customizeMode = false;
+let widgetLayoutSnapshot = null;
+
+function getCols(){
+  return Array.from(document.querySelectorAll(".col"));
+}
+function getWidgets(){
+  return Array.from(document.querySelectorAll(".widget[data-widget]"));
+}
+
+/* ---------- Snapshot / Restore ---------- */
+function snapshotLayout(){
+  const cols = getCols();
+  return cols.map(col => ({
+    colKey: col.className, // includes col--left etc
+    widgetIds: Array.from(col.querySelectorAll(".widget[data-widget]"))
+      .filter(w => w.style.display !== "none")
+      .map(w => w.getAttribute("data-widget"))
+  }));
+}
+
+function restoreLayout(snapshot){
+  if(!snapshot) return;
+
+  // map widgets by unique data-widget
+  const map = new Map();
+  getWidgets().forEach(w => map.set(w.getAttribute("data-widget"), w));
+
+  snapshot.forEach(s => {
+    const selector = "." + s.colKey.split(" ").join(".");
+    const col = document.querySelector(selector);
+    if(!col) return;
+
+    s.widgetIds.forEach(id => {
+      const w = map.get(id);
+      if(w){
+        w.style.display = "";
+        w.dataset.removed = "0";
+        col.appendChild(w);
+      }
+    });
+  });
+
+  // also restore any widgets that were hidden but existed at snapshot time
+  getWidgets().forEach(w => {
+    // if widget was present at snapshot time, it would have been appended above.
+    // if it was removed during customize, we want it back only on cancel:
+    // we handle this by resetting display for all widgets after restore call (cancel path).
+  });
+}
+
+/* ---------- Customize Mode Toggle ---------- */
+function setCustomizeMode(on){
+  customizeMode = on;
+
+  if(on){
+    widgetLayoutSnapshot = snapshotLayout();
+    document.body.classList.add("customizeMode");
+    if(customizeActions) customizeActions.style.display = "flex";
+    enableWidgetInteractions();
+  }else{
+    document.body.classList.remove("customizeMode");
+    if(customizeActions) customizeActions.style.display = "none";
+    disableWidgetInteractions();
+  }
+}
+
+if(btnCustomize){
+  btnCustomize.addEventListener("click", () => {
+    setCustomizeMode(!customizeMode);
+  });
+}
+
+if(btnCancelWidgets){
+  btnCancelWidgets.addEventListener("click", () => {
+    // restore original order + show everything that existed
+    restoreLayout(widgetLayoutSnapshot);
+
+    // ensure any removed widgets come back
+    getWidgets().forEach(w => {
+      w.style.display = "";
+      w.dataset.removed = "0";
+    });
+
+    setCustomizeMode(false);
+  });
+}
+
+if(btnSaveWidgets){
+  btnSaveWidgets.addEventListener("click", () => {
+    const snapshot = snapshotLayout();
+
+    // Demo persistence: store only on SAVE (cancel does not touch)
+    try{
+      localStorage.setItem("dashboard_widget_layout_v2", JSON.stringify(snapshot));
+    }catch(e){}
+
+    // realistic UX: confirm
+    alert("Saved (demo). Your dashboard layout has been updated.");
+
+    setCustomizeMode(false);
+  });
+}
+
+/* Load saved layout on page load */
+(function tryLoadSavedLayout(){
+  try{
+    const raw = localStorage.getItem("dashboard_widget_layout_v2");
+    if(!raw) return;
+    const data = JSON.parse(raw);
+    restoreLayout(data);
+  }catch(e){}
+})();
+
+/* ---------- Remove Widget (Customize only) ---------- */
+function onRemoveWidgetClick(e){
+  const btn = e.target.closest(".widgetRemove");
+  if(!btn) return;
+  const w = btn.closest(".widget[data-widget]");
+  if(!w) return;
+
+  // simple remove: hide
+  w.style.display = "none";
+  w.dataset.removed = "1";
+}
+
+/* =========================
+   TRUE DRAG SYSTEM (pointer-based)
+========================= */
+
+let drag = {
+  active: false,
+  widget: null,
+  placeholder: null,
+  startX: 0,
+  startY: 0,
+  offsetX: 0,
+  offsetY: 0,
+  w: 0,
+  h: 0,
+  lastClientX: 0,
+  lastClientY: 0,
+  autoScrollRAF: null
+};
+
+function makePlaceholder(heightPx){
+  const ph = document.createElement("div");
+  ph.className = "dropPlaceholder";
+  ph.style.height = Math.max(60, heightPx) + "px";
+  return ph;
+}
+
+function setGhostPosition(clientX, clientY){
+  const x = clientX - drag.offsetX;
+  const y = clientY - drag.offsetY;
+
+  drag.widget.style.setProperty("--dragX", x + "px");
+  drag.widget.style.setProperty("--dragY", y + "px");
+}
+
+function nearestDropTarget(clientX, clientY){
+  // find the column under pointer
+  const el = document.elementFromPoint(clientX, clientY);
+  if(!el) return null;
+
+  const col = el.closest(".col");
+  if(!col) return null;
+
+  // find the closest widget inside that col to insert before
+  const widgets = Array.from(col.querySelectorAll(".widget[data-widget]"))
+    .filter(w => w !== drag.widget && w.style.display !== "none" && !w.classList.contains("is-drag-ghost"));
+
+  if(widgets.length === 0){
+    return { col, before: null };
+  }
+
+  // find insertion point by vertical midpoint
+  for(const w of widgets){
+    const r = w.getBoundingClientRect();
+    const mid = r.top + r.height/2;
+    if(clientY < mid){
+      return { col, before: w };
+    }
+  }
+
+  return { col, before: null }; // append at end
+}
+
+function placePlaceholder(clientX, clientY){
+  const target = nearestDropTarget(clientX, clientY);
+  if(!target) return;
+
+  const { col, before } = target;
+
+  // if placeholder not in DOM yet, add it
+  if(!drag.placeholder.parentNode){
+    col.appendChild(drag.placeholder);
+  }
+
+  // move placeholder to correct position
+  if(before){
+    if(drag.placeholder.nextSibling !== before){
+      col.insertBefore(drag.placeholder, before);
+    }
+  }else{
+    col.appendChild(drag.placeholder);
+  }
+}
+
+/* Auto-scroll near top/bottom while dragging */
+function startAutoScroll(){
+  if(drag.autoScrollRAF) cancelAnimationFrame(drag.autoScrollRAF);
+
+  const tick = ()=>{
+    if(!drag.active) return;
+
+    const y = drag.lastClientY;
+    const edge = 90; // px
+    const speed = 18; // px per frame-ish
+
+    const topEdge = edge;
+    const bottomEdge = window.innerHeight - edge;
+
+    if(y < topEdge){
+      window.scrollBy(0, -speed);
+      // after scroll, update placeholder based on last known pointer
+      placePlaceholder(drag.lastClientX, drag.lastClientY);
+    }else if(y > bottomEdge){
+      window.scrollBy(0, speed);
+      placePlaceholder(drag.lastClientX, drag.lastClientY);
+    }
+
+    drag.autoScrollRAF = requestAnimationFrame(tick);
+  };
+
+  drag.autoScrollRAF = requestAnimationFrame(tick);
+}
+
+function stopAutoScroll(){
+  if(drag.autoScrollRAF){
+    cancelAnimationFrame(drag.autoScrollRAF);
+    drag.autoScrollRAF = null;
+  }
+}
+
+function onPointerMove(e){
+  if(!drag.active) return;
+
+  drag.lastClientX = e.clientX;
+  drag.lastClientY = e.clientY;
+
+  setGhostPosition(e.clientX, e.clientY);
+  placePlaceholder(e.clientX, e.clientY);
+}
+
+function endDrag(commit){
+  if(!drag.active) return;
+
+  stopAutoScroll();
+
+  drag.active = false;
+
+  // remove ghost styling
+  drag.widget.classList.remove("is-drag-ghost");
+  drag.widget.classList.remove("dragging");
+  drag.widget.style.removeProperty("--dragW");
+  drag.widget.style.removeProperty("--dragX");
+  drag.widget.style.removeProperty("--dragY");
+  drag.widget.style.width = "";
+  drag.widget.style.height = "";
+
+  // commit = insert into placeholder position
+  if(commit && drag.placeholder && drag.placeholder.parentNode){
+    drag.placeholder.parentNode.insertBefore(drag.widget, drag.placeholder);
+  }
+
+  // cleanup placeholder
+  if(drag.placeholder && drag.placeholder.parentNode){
+    drag.placeholder.parentNode.removeChild(drag.placeholder);
+  }
+
+  drag.widget = null;
+  drag.placeholder = null;
+
+  document.removeEventListener("pointermove", onPointerMove, { passive: true });
+  document.removeEventListener("pointerup", onPointerUp, { passive: true });
+  document.removeEventListener("pointercancel", onPointerCancel, { passive: true });
+}
+
+function onPointerUp(){
+  endDrag(true);
+}
+function onPointerCancel(){
+  endDrag(false);
+}
+
+function beginDragFromHandle(handleEl, e){
+  const w = handleEl.closest(".widget[data-widget]");
+  if(!w) return;
+
+  // ignore if hidden
+  if(w.style.display === "none") return;
+
+  drag.active = true;
+  drag.widget = w;
+
+  const rect = w.getBoundingClientRect();
+  drag.w = rect.width;
+  drag.h = rect.height;
+
+  // pointer offset within widget
+  drag.offsetX = e.clientX - rect.left;
+  drag.offsetY = e.clientY - rect.top;
+
+  drag.lastClientX = e.clientX;
+  drag.lastClientY = e.clientY;
+
+  // placeholder stays in layout
+  drag.placeholder = makePlaceholder(drag.h);
+
+  // insert placeholder where widget used to be
+  w.parentNode.insertBefore(drag.placeholder, w);
+
+  // turn widget into fixed-position ghost
+  w.classList.add("dragging");
+  w.classList.add("is-drag-ghost");
+  w.style.setProperty("--dragW", drag.w + "px");
+  w.style.width = drag.w + "px";
+  w.style.height = drag.h + "px";
+
+  setGhostPosition(e.clientX, e.clientY);
+
+  // bind moves
+  document.addEventListener("pointermove", onPointerMove, { passive: true });
+  document.addEventListener("pointerup", onPointerUp, { passive: true });
+  document.addEventListener("pointercancel", onPointerCancel, { passive: true });
+
+  // start auto scroll loop
+  startAutoScroll();
+}
+
+function onHandlePointerDown(e){
+  if(!customizeMode) return;
+
+  const handle = e.target.closest(".widgetMove");
+  if(!handle) return;
+
+  // IMPORTANT: don’t drag if clicking remove button
+  if(e.target.closest(".widgetRemove")) return;
+
+  // capture pointer so ghost tracks well
+  try{ handle.setPointerCapture(e.pointerId); }catch(err){}
+
+  beginDragFromHandle(handle, e);
+}
+
+/* ---------- Enable / Disable interactions ---------- */
+function enableWidgetInteractions(){
+  // Remove button
+  document.addEventListener("click", onRemoveWidgetClick);
+
+  // Drag handle pointer down
+  document.addEventListener("pointerdown", onHandlePointerDown);
+
+  // Make sure widget handles feel draggable
+  getWidgets().forEach(w => {
+    const move = w.querySelector(".widgetMove");
+    if(move) move.style.cursor = "grab";
+  });
+}
+
+function disableWidgetInteractions(){
+  document.removeEventListener("click", onRemoveWidgetClick);
+  document.removeEventListener("pointerdown", onHandlePointerDown);
+
+  // if somehow still dragging
+  endDrag(false);
+}
+
+/* ---------- Add Widget Drawer hooks (unchanged demo) ---------- */
+if(btnAddWidget && widgetDrawer){
+  btnAddWidget.addEventListener("click", ()=>{
+    widgetDrawer.classList.add("drawer--open");
+    widgetDrawer.setAttribute("aria-hidden","false");
+  });
+}
+if(btnWidgetDrawerDone && widgetDrawer){
+  btnWidgetDrawerDone.addEventListener("click", ()=>{
+    widgetDrawer.classList.remove("drawer--open");
+    widgetDrawer.setAttribute("aria-hidden","true");
+  });
+}
+document.querySelectorAll("[data-widget-drawer-close='1']").forEach(el=>{
+  el.addEventListener("click", ()=>{
+    if(!widgetDrawer) return;
+    widgetDrawer.classList.remove("drawer--open");
+    widgetDrawer.setAttribute("aria-hidden","true");
+  });
+});
+
 
 </script>
