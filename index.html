@@ -275,14 +275,22 @@ body.customizeMode .widget:active{
   transform: translate3d(var(--dragX, 0px), var(--dragY, 0px), 0) rotate(.25deg) !important;
   opacity: .95;
 }
-
 .dropPlaceholder{
   border: 2px dashed rgba(59,130,246,.45);
   border-radius: 16px;
   background: rgba(59,130,246,.08);
   box-shadow: inset 0 0 0 2px rgba(59,130,246,.10);
   margin: 0;
+  transition: background .12s ease, border-color .12s ease, box-shadow .12s ease;
 }
+
+/* ✅ GREEN = confirmed valid landing spot */
+.dropPlaceholder.is-valid-drop{
+  border-color: rgba(34,197,94,.85);
+  background: rgba(34,197,94,.12);
+  box-shadow: inset 0 0 0 2px rgba(34,197,94,.18), 0 10px 24px rgba(34,197,94,.12);
+}
+
 
 body.customizeMode .col{
   min-height: 40px;
@@ -346,42 +354,48 @@ body.customizeMode .widgetDropHint{ display:block; }
   border-radius: 14px;
   padding: 12px;
   cursor:grab;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  background: #fff;
   transition: transform .14s ease, box-shadow .14s ease;
-  min-height: 74px;
+  min-height: 92px;
+
   display:flex;
   flex-direction:column;
-  justify-content:space-between;
+  gap: 10px;
 }
+
 .widgetTile:hover{
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
 }
-.widgetTile__top{
+
+.widgetTile__preview{
+  border: 1px solid rgba(226,232,240,.9);
+  border-radius: 12px;
+  padding: 10px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
   display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap: 10px;
+  flex-direction:column;
+  gap: 8px;
 }
-.widgetTile__name{
-  font-weight: 800;
-  font-size: 13px;
-}
-.widgetTile__meta{
-  font-size: 12px;
-  color: var(--muted);
-  margin-top: 6px;
-}
-.widgetTile__pill{
-  height: 22px;
-  padding: 0 10px;
+
+.widgetTile__line{
+  height: 8px;
   border-radius: 999px;
-  background: var(--primary-subtle);
-  color: var(--primary);
-  font-weight: 800;
-  font-size: 11px;
-  display:inline-flex;
-  align-items:center;
+  background: rgba(148,163,184,.30);
+}
+.widgetTile__line.wide{ width: 90%; }
+.widgetTile__line.med{ width: 70%; }
+.widgetTile__line.short{ width: 46%; }
+
+.widgetTile__miniRow{
+  display:flex;
+  gap: 8px;
+}
+.widgetTile__miniPill{
+  height: 18px;
+  width: 58px;
+  border-radius: 999px;
+  background: rgba(59,130,246,.14);
 }
 
 /* =========================
@@ -2388,6 +2402,32 @@ textarea.formTextarea:focus{
 
     </div>
   </div>
+<!-- CANCEL WIDGET PLACEMENT OVERLAY (only appears while dragging from drawer) -->
+<div id="placeWidgetCancel" style="display:none; position:fixed; inset:0; z-index:999999;">
+  <div style="position:absolute; inset:0; background:transparent;"></div>
+
+  <button id="btnCancelPlaceWidget"
+    type="button"
+    style="
+      position:fixed;
+      top: 92px;
+      right: 18px;
+      z-index: 1000000;
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      border: 1px solid rgba(226,232,240,.9);
+      background: rgba(255,255,255,.96);
+      box-shadow: 0 10px 24px rgba(16,24,40,.18);
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#334155;
+    ">
+    <i class="fa-solid fa-xmark"></i>
+  </button>
+</div>
 
 <!-- ADD WIDGET DRAWER -->
 <div id="widgetDrawer" class="drawer drawer--widgets" aria-hidden="true">
@@ -3005,6 +3045,57 @@ supportForm.addEventListener("change", (e)=>{
 
   setDetailsHint(v);
 });
+/* =========================
+   ADD WIDGET DRAWER: drag tiles into dashboard
+========================= */
+document.querySelectorAll(".widgetTile[draggable='true']").forEach(tile=>{
+  // add realistic mini-preview
+  if(!tile.querySelector(".widgetTile__preview")){
+    const preview = document.createElement("div");
+    preview.className = "widgetTile__preview";
+    preview.innerHTML = `
+      <div class="widgetTile__line wide"></div>
+      <div class="widgetTile__line med"></div>
+      <div class="widgetTile__miniRow">
+        <div class="widgetTile__miniPill"></div>
+        <div class="widgetTile__miniPill" style="background:rgba(148,163,184,.16);"></div>
+      </div>
+    `;
+    tile.appendChild(preview);
+  }
+
+  tile.addEventListener("mousedown",(e)=>{
+    // start drag from drawer
+    const key = tile.getAttribute("data-add-widget");
+    if(!key) return;
+
+    pendingDrawerWidgetKey = key;
+
+    // ✅ auto close drawer to allow proper drag/drop
+    closeWidgetDrawer();
+
+    // ✅ show cancel placing X
+    openPlaceWidgetCancel();
+
+    // create a temporary fake widget for ghost sizing
+    const fake = document.createElement("section");
+    fake.className = "card widget";
+    fake.style.width = "420px";
+    fake.innerHTML = `
+      <div class="card__subtitle">
+        <h2 class="card__title">${humanizeWidgetTitle(key)}</h2>
+        <p>Widget preview</p>
+      </div>
+      <div style="border:1px solid var(--border); border-radius:12px; padding:12px;">
+        <div style="height:10px; border-radius:999px; background:rgba(148,163,184,.22); width:78%;"></div>
+        <div style="margin-top:10px; height:10px; border-radius:999px; background:rgba(148,163,184,.18); width:60%;"></div>
+      </div>
+    `;
+
+    // Begin drag
+    startDraggingWidget(fake, e.clientX, e.clientY, true);
+  });
+});
 
 supportForm.addEventListener("submit", (e)=>{
   e.preventDefault();
@@ -3402,6 +3493,210 @@ function mapReadyTasksToDrawer(){
   });
 }
 mapReadyTasksToDrawer();
+
+/* =========================
+   DASHBOARD WIDGET DRAG + DROP (SMOOTH + GREEN DROP CONFIRMATION)
+========================= */
+
+let dragState = {
+  active: false,
+  fromDrawer: false,
+  dragWidgetEl: null,     // original widget (if dragging existing)
+  ghostEl: null,          // floating copy
+  placeholderEl: null,    // drop placeholder
+  originCol: null,
+  originNextSibling: null,
+  targetCol: null,
+  lastX: 0,
+  lastY: 0,
+  raf: 0
+};
+
+function setCustomizeMode(on){
+  document.body.classList.toggle("customizeMode", !!on);
+
+  const actions = document.getElementById("customizeActions");
+  const btnCustomize = document.getElementById("btnCustomize");
+btnCustomize.addEventListener("click", ()=>{
+  setCustomizeMode(true);
+});
+btnCancelWidgets.addEventListener("click", ()=>{
+  // Cancel = revert by reloading snapshot if you already have it
+  // For this mock: simply exit customize mode
+  setCustomizeMode(false);
+});
+
+  if(actions) actions.style.display = on ? "flex" : "none";
+  if(btnCustomize) btnCustomize.style.display = on ? "none" : "";
+}
+
+function getCols(){
+  return Array.from(document.querySelectorAll(".col"));
+}
+
+function getClosestColFromPoint(x,y){
+  const cols = getCols();
+  let best = null;
+  let bestDist = Infinity;
+  cols.forEach(c=>{
+    const r = c.getBoundingClientRect();
+    const cx = (r.left + r.right)/2;
+    const cy = (r.top + r.bottom)/2;
+    const d = Math.hypot(cx-x, cy-y);
+    if(d < bestDist){
+      bestDist = d;
+      best = c;
+    }
+  });
+  return best;
+}
+
+function createPlaceholderLike(widgetEl){
+  const ph = document.createElement("div");
+  ph.className = "dropPlaceholder";
+  const r = widgetEl.getBoundingClientRect();
+  ph.style.height = Math.max(72, r.height) + "px";
+  return ph;
+}
+
+function ensurePlaceholderInCol(col, placeholder){
+  if(!col || !placeholder) return;
+  if(placeholder.parentElement !== col){
+    col.appendChild(placeholder);
+  }
+}
+
+function clearValidDrop(){
+  document.querySelectorAll(".dropPlaceholder.is-valid-drop").forEach(el=>{
+    el.classList.remove("is-valid-drop");
+  });
+}
+
+function setValidDrop(placeholder){
+  clearValidDrop();
+  if(placeholder) placeholder.classList.add("is-valid-drop");
+}
+
+function buildGhost(widgetEl){
+  const ghost = widgetEl.cloneNode(true);
+  ghost.classList.add("is-drag-ghost");
+  ghost.style.setProperty("--dragW", widgetEl.getBoundingClientRect().width + "px");
+  return ghost;
+}
+
+function moveGhostSmooth(x,y){
+  dragState.lastX = x;
+  dragState.lastY = y;
+
+  if(dragState.raf) return;
+  dragState.raf = requestAnimationFrame(()=>{
+    dragState.raf = 0;
+    if(!dragState.ghostEl) return;
+
+    dragState.ghostEl.style.setProperty("--dragX", (dragState.lastX - 20) + "px");
+    dragState.ghostEl.style.setProperty("--dragY", (dragState.lastY - 20) + "px");
+  });
+}
+
+function startDraggingWidget(widgetEl, startX, startY, fromDrawer=false){
+  if(!document.body.classList.contains("customizeMode")) return;
+
+  dragState.active = true;
+  dragState.fromDrawer = !!fromDrawer;
+  dragState.dragWidgetEl = fromDrawer ? null : widgetEl;
+
+  if(!fromDrawer){
+    dragState.originCol = widgetEl.parentElement;
+    dragState.originNextSibling = widgetEl.nextElementSibling;
+  } else {
+    dragState.originCol = null;
+    dragState.originNextSibling = null;
+  }
+
+  const ghost = buildGhost(widgetEl);
+  dragState.ghostEl = ghost;
+  document.body.appendChild(ghost);
+
+  moveGhostSmooth(startX, startY);
+
+  // placeholder
+  const placeholder = createPlaceholderLike(widgetEl);
+  dragState.placeholderEl = placeholder;
+
+  // target column from start point
+  const col = getClosestColFromPoint(startX, startY);
+  dragState.targetCol = col;
+  ensurePlaceholderInCol(col, placeholder);
+  setValidDrop(placeholder);
+
+  // if dragging an existing widget, temporarily hide it
+  if(widgetEl && !fromDrawer){
+    widgetEl.classList.add("widgetRemoved");
+  }
+
+  document.addEventListener("mousemove", onDragMove);
+  document.addEventListener("mouseup", onDragEnd);
+}
+
+function onDragMove(e){
+  if(!dragState.active) return;
+  moveGhostSmooth(e.clientX, e.clientY);
+
+  const col = getClosestColFromPoint(e.clientX, e.clientY);
+  if(col && col !== dragState.targetCol){
+    dragState.targetCol = col;
+    ensurePlaceholderInCol(col, dragState.placeholderEl);
+  }
+
+  // ✅ Green highlight = always the placeholder itself
+  setValidDrop(dragState.placeholderEl);
+}
+
+function onDragEnd(){
+  if(!dragState.active) return;
+
+  document.removeEventListener("mousemove", onDragMove);
+  document.removeEventListener("mouseup", onDragEnd);
+
+  clearValidDrop();
+
+  // remove ghost
+  if(dragState.ghostEl){
+    dragState.ghostEl.remove();
+  }
+
+  // if dragging existing widget
+  if(!dragState.fromDrawer && dragState.dragWidgetEl){
+    dragState.dragWidgetEl.classList.remove("widgetRemoved");
+    if(dragState.placeholderEl && dragState.placeholderEl.parentElement){
+      dragState.placeholderEl.parentElement.insertBefore(dragState.dragWidgetEl, dragState.placeholderEl);
+    }
+  }
+
+  // if dragging from drawer: placeholder becomes real widget if dropped
+  if(dragState.fromDrawer && dragState.placeholderEl && dragState.placeholderEl.parentElement){
+    const real = buildRealWidgetFromPendingTile();
+    if(real){
+      dragState.placeholderEl.parentElement.insertBefore(real, dragState.placeholderEl);
+      bindWidgetControls(real);
+    }
+  }
+
+  // remove placeholder
+  if(dragState.placeholderEl){
+    dragState.placeholderEl.remove();
+  }
+
+  dragState = {
+    active:false, fromDrawer:false, dragWidgetEl:null, ghostEl:null, placeholderEl:null,
+    originCol:null, originNextSibling:null, targetCol:null, lastX:0, lastY:0, raf:0
+  };
+
+  // allow cancel overlay to disappear
+  closePlaceWidgetCancel();
+}
+
+
 /* =========================
    SMART FEED (LIMIT 5 + DISMISS ROTATE)
 ========================= */
@@ -3564,6 +3859,121 @@ const btnCancelWidgets = document.getElementById("btnCancelWidgets");
 
 const widgetDrawer = document.getElementById("widgetDrawer");
 const btnWidgetDrawerDone = document.getElementById("btnWidgetDrawerDone");
+let pendingDrawerWidgetKey = null;
+
+function openWidgetDrawer(){
+  widgetDrawer.classList.add("drawer--open");
+  widgetDrawer.setAttribute("aria-hidden","false");
+  document.body.style.overflow = "hidden";
+}
+
+function closeWidgetDrawer(){
+  widgetDrawer.classList.remove("drawer--open");
+  widgetDrawer.setAttribute("aria-hidden","true");
+  document.body.style.overflow = "";
+}
+
+// close drawer on backdrop or close btn
+document.querySelectorAll("[data-widget-drawer-close='1']").forEach(el=>{
+  el.addEventListener("click", closeWidgetDrawer);
+});
+
+btnWidgetDrawerDone.addEventListener("click", closeWidgetDrawer);
+
+function openPlaceWidgetCancel(){
+  const el = document.getElementById("placeWidgetCancel");
+  if(el) el.style.display = "block";
+}
+function closePlaceWidgetCancel(){
+  const el = document.getElementById("placeWidgetCancel");
+  if(el) el.style.display = "none";
+}
+
+// X cancels placing widget
+document.getElementById("btnCancelPlaceWidget").addEventListener("click", ()=>{
+  // simply terminate current drag and remove placeholder/ghost
+  document.dispatchEvent(new MouseEvent("mouseup"));
+});
+
+// ESC cancels placing widget too
+document.addEventListener("keydown",(e)=>{
+  if(e.key === "Escape" && pendingDrawerWidgetKey){
+    document.dispatchEvent(new MouseEvent("mouseup"));
+  }
+});
+
+/* Build a realistic widget card from drawer key */
+function buildRealWidgetFromPendingTile(){
+  if(!pendingDrawerWidgetKey) return null;
+
+  const key = pendingDrawerWidgetKey;
+  pendingDrawerWidgetKey = null;
+
+  const section = document.createElement("section");
+  section.className = "card widget";
+  section.setAttribute("data-widget", key);
+
+  section.innerHTML = `
+    <div class="widgetTools" aria-hidden="true">
+      <button class="widgetToolBtn widgetMove" title="Drag widget" aria-label="Drag widget"><i class="fa-solid fa-grip-vertical"></i></button>
+      <button class="widgetToolBtn widgetRemove" title="Remove widget" aria-label="Remove widget"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="widgetDropHint" aria-hidden="true"></div>
+
+    <div class="card__subtitle">
+      <h2 class="card__title">${humanizeWidgetTitle(key)}</h2>
+      <p>Widget preview (demo content)</p>
+    </div>
+
+    <div style="border:1px solid var(--border); border-radius:12px; padding:12px; background:#fff;">
+      <div style="height:10px; border-radius:999px; background:rgba(148,163,184,.28); width:78%;"></div>
+      <div style="margin-top:10px; height:10px; border-radius:999px; background:rgba(148,163,184,.22); width:62%;"></div>
+      <div style="margin-top:14px; display:flex; gap:8px;">
+        <div style="height:22px; width:70px; border-radius:999px; background:rgba(59,130,246,.14);"></div>
+        <div style="height:22px; width:56px; border-radius:999px; background:rgba(34,197,94,.14);"></div>
+      </div>
+    </div>
+  `;
+
+  return section;
+}
+
+function humanizeWidgetTitle(key){
+  const map = {
+    contacts: "Contacts",
+    importantContacts: "Important Contacts",
+    vcards: "vCards",
+    messages: "Messages",
+    followups: "Follow-ups",
+    networks: "Networks",
+    groups: "Groups",
+    importantDates: "Important Dates",
+    referrals: "Referrals"
+  };
+  return map[key] || "Widget";
+}
+
+/* Bind move/remove controls on newly created widgets */
+function bindWidgetControls(widgetEl){
+  const moveBtn = widgetEl.querySelector(".widgetMove");
+  const removeBtn = widgetEl.querySelector(".widgetRemove");
+
+  if(moveBtn){
+    moveBtn.addEventListener("mousedown",(e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      startDraggingWidget(widgetEl, e.clientX, e.clientY, false);
+    });
+  }
+
+  if(removeBtn){
+    removeBtn.addEventListener("click",(e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      widgetEl.remove();
+    });
+  }
+}
 
 let customizeMode = false;
 let widgetLayoutSnapshot = null;
@@ -3654,19 +4064,13 @@ if(btnCancelWidgets){
 }
 
 if(btnSaveWidgets){
-  btnSaveWidgets.addEventListener("click", () => {
-    const snapshot = snapshotLayout();
+btnSaveWidgets.addEventListener("click", () => {
+  // ✅ NO confirmation placeholder
+  // ✅ Keep current widget positions as-is
+  // ✅ Exit customize mode immediately
+  setCustomizeMode(false);
+});
 
-    // Demo persistence: store only on SAVE (cancel does not touch)
-    try{
-      localStorage.setItem("dashboard_widget_layout_v2", JSON.stringify(snapshot));
-    }catch(e){}
-
-    // realistic UX: confirm
-    alert("Saved (demo). Your dashboard layout has been updated.");
-
-    setCustomizeMode(false);
-  });
 }
 
 /* Load saved layout on page load */
