@@ -190,6 +190,15 @@ p{ margin:0; color:var(--muted); }
 
 
 .col{ display:flex; flex-direction:column; gap: 18px; }
+/* =========================
+   Topbar: hide stats + schedule button ONLY in customize mode
+========================= */
+body.customizeMode .topbar__actions--hideOnCustomize .statcard{
+  display: none !important;
+}
+body.customizeMode .topbar__actions--hideOnCustomize .topbar__scheduleBtn{
+  display: none !important;
+}
 
 /* =========================
    DASHBOARD WIDGET CUSTOMIZE MODE
@@ -1712,7 +1721,7 @@ textarea.formTextarea:focus{
         <p>Your onboarding journey is in progress</p>
       </div>
 
-      <div class="topbar__actions">
+      <div class="topbar__actions topbar__actions--hideOnCustomize">
         <div class="statcard statcard--subtle">
           <div class="statcard__icon">
             <!-- coins -->
@@ -1745,14 +1754,10 @@ textarea.formTextarea:focus{
           </div>
         </div>
 
-<!-- NEW: Customize + actions (only shows in customize mode) -->
-<button id="btnCustomize" class="btn btn--outline btn--block" type="button" title="Customize dashboard">
-  <i class="fa-solid fa-gear"></i>
-  Customize
-</button>
+
 
 <!-- Existing button stays exactly the same -->
-<button class="btn btn--primary">
+<button class="btn btn--primary topbar__scheduleBtn">
   <svg class="btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
     <path d="M8 2v4"></path>
     <path d="M16 2v4"></path>
@@ -1760,6 +1765,12 @@ textarea.formTextarea:focus{
     <path d="M3 10h18"></path>
   </svg>
   Schedule Success Session
+</button>
+
+<!-- NEW: Customize + actions (only shows in customize mode) -->
+<button id="btnCustomize" class="btn btn--outline btn--block" type="button" title="Customize dashboard">
+  <i class="fa-solid fa-gear"></i>
+  Customize Dashboard
 </button>
 
 <!-- Customize action row (hidden unless customize mode) -->
